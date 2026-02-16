@@ -163,7 +163,7 @@ The generator's asset manifest supports both static images and spritesheets with
 
 ## Deployment
 
-See [DEPLOY.md](./DEPLOY.md) for production deployment instructions covering PM2, systemd, nginx, and cronjob setup.
+See [DEPLOY.md](./DEPLOY.md) for production deployment instructions covering PM2, systemd, nginx, cronjob setup, and Kubernetes with Cloudflare Zero Trust tunnels.
 
 ## Project Commands
 
