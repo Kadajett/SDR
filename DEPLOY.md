@@ -251,6 +251,415 @@ server {
 
 WebSocket upgrade headers are required for Colyseus rooms to work through the proxy.
 
+## Kubernetes (Local) with Cloudflare Zero Trust
+
+This section covers running the server on a local machine using Kubernetes (via kubectl) and exposing it to the internet through Cloudflare Zero Trust tunnels. No public IP or port forwarding required.
+
+### Prerequisites
+
+- Docker or Podman (for building the container image)
+- kubectl with a local cluster (minikube, k3s, kind, or Docker Desktop's built-in k8s)
+- A Cloudflare account with a domain (free tier works)
+- `cloudflared` CLI installed
+
+### Container Image
+
+Create a Dockerfile at the repo root:
+
+```dockerfile
+# Dockerfile
+FROM node:20-slim AS build
+WORKDIR /app
+RUN corepack enable pnpm
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY tsconfig.base.json ./
+COPY packages/shared/package.json packages/shared/
+COPY packages/engine/package.json packages/engine/
+COPY packages/server/package.json packages/server/
+
+RUN pnpm install --frozen-lockfile
+
+COPY packages/shared/ packages/shared/
+COPY packages/engine/ packages/engine/
+COPY packages/server/ packages/server/
+
+RUN pnpm --filter @sdr/server build
+
+FROM node:20-slim
+WORKDIR /app
+RUN corepack enable pnpm
+
+COPY --from=build /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
+COPY --from=build /app/packages/shared/ packages/shared/
+COPY --from=build /app/packages/engine/ packages/engine/
+COPY --from=build /app/packages/server/ packages/server/
+COPY --from=build /app/node_modules/ node_modules/
+COPY --from=build /app/packages/server/node_modules/ packages/server/node_modules/
+
+EXPOSE 2567
+CMD ["node", "packages/server/dist/index.js"]
+```
+
+Build and load into your local cluster:
+
+```bash
+docker build -t sdr-server:latest .
+
+# For minikube:
+minikube image load sdr-server:latest
+
+# For kind:
+kind load docker-image sdr-server:latest
+
+# For k3s (import from docker):
+docker save sdr-server:latest | sudo k3s ctr images import -
+
+# For Docker Desktop k8s: the image is already available
+```
+
+### Kubernetes Manifests
+
+Create `k8s/` directory with the following files:
+
+**k8s/namespace.yaml**
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sdr
+```
+
+**k8s/games-pvc.yaml**
+
+Persistent volume for the games directory. Games survive pod restarts.
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sdr-games
+  namespace: sdr
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+```
+
+**k8s/configmap.yaml**
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sdr-config
+  namespace: sdr
+data:
+  SDR_PORT: "2567"
+  SDR_GAMES_DIR: "/data/games"
+  SDR_CORS_ORIGINS: "https://sdr.yourdomain.com"
+  NODE_ENV: "production"
+```
+
+**k8s/secret.yaml**
+
+Only needed if running the generator on the same cluster.
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: sdr-secrets
+  namespace: sdr
+type: Opaque
+stringData:
+  ANTHROPIC_API_KEY: "sk-ant-your-key-here"
+```
+
+**k8s/deployment.yaml**
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sdr-server
+  namespace: sdr
+spec:
+  replicas: 1  # Single replica: Colyseus rooms are stateful
+  selector:
+    matchLabels:
+      app: sdr-server
+  template:
+    metadata:
+      labels:
+        app: sdr-server
+    spec:
+      containers:
+        - name: sdr-server
+          image: sdr-server:latest
+          imagePullPolicy: Never  # Local image, not from a registry
+          ports:
+            - containerPort: 2567
+              name: http-ws
+          envFrom:
+            - configMapRef:
+                name: sdr-config
+          volumeMounts:
+            - name: games
+              mountPath: /data/games
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 2567
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 2567
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"
+      volumes:
+        - name: games
+          persistentVolumeClaim:
+            claimName: sdr-games
+```
+
+**k8s/service.yaml**
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: sdr-server
+  namespace: sdr
+spec:
+  selector:
+    app: sdr-server
+  ports:
+    - port: 2567
+      targetPort: 2567
+      name: http-ws
+```
+
+**k8s/generator-cronjob.yaml**
+
+Optional: run the generator as a Kubernetes CronJob instead of a system cron.
+
+```yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sdr-generator
+  namespace: sdr
+spec:
+  schedule: "0 3 * * *"  # 3 AM daily
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 600
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: generator
+              image: sdr-server:latest  # Same image, different command
+              command: ["pnpm", "generate"]
+              workingDir: /app
+              envFrom:
+                - configMapRef:
+                    name: sdr-config
+                - secretRef:
+                    name: sdr-secrets
+              volumeMounts:
+                - name: games
+                  mountPath: /data/games
+          volumes:
+            - name: games
+              persistentVolumeClaim:
+                claimName: sdr-games
+```
+
+### Apply Manifests
+
+```bash
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/games-pvc.yaml
+kubectl apply -f k8s/configmap.yaml
+kubectl apply -f k8s/secret.yaml      # Only if using the generator CronJob
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+kubectl apply -f k8s/generator-cronjob.yaml  # Optional
+
+# Verify
+kubectl -n sdr get pods
+kubectl -n sdr logs deployment/sdr-server
+```
+
+### Cloudflare Zero Trust Tunnel
+
+Cloudflare Tunnels expose your local Kubernetes service to the internet without opening ports or needing a public IP. Traffic flows: `Internet -> Cloudflare edge -> cloudflared (in cluster) -> sdr-server Service`.
+
+#### 1. Create the tunnel
+
+```bash
+cloudflared tunnel login  # Opens browser, authorizes your Cloudflare account
+cloudflared tunnel create sdr-tunnel
+```
+
+This outputs a tunnel ID (UUID) and creates a credentials file at `~/.cloudflared/<TUNNEL_ID>.json`.
+
+#### 2. Create the credentials Secret
+
+```bash
+kubectl -n sdr create secret generic cloudflared-creds \
+  --from-file=credentials.json=$HOME/.cloudflared/<TUNNEL_ID>.json
+```
+
+#### 3. Configure DNS
+
+Point your subdomain to the tunnel:
+
+```bash
+cloudflared tunnel route dns sdr-tunnel sdr.yourdomain.com
+```
+
+#### 4. Deploy cloudflared in the cluster
+
+**k8s/cloudflared.yaml**
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudflared-config
+  namespace: sdr
+data:
+  config.yaml: |
+    tunnel: <TUNNEL_ID>
+    credentials-file: /etc/cloudflared/credentials.json
+    no-autoupdate: true
+    ingress:
+      - hostname: sdr.yourdomain.com
+        service: http://sdr-server:2567
+        originRequest:
+          noTLSVerify: true
+          httpHostHeader: sdr.yourdomain.com
+      - service: http_status:404
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflared
+  namespace: sdr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudflared
+  template:
+    metadata:
+      labels:
+        app: cloudflared
+    spec:
+      containers:
+        - name: cloudflared
+          image: cloudflare/cloudflared:latest
+          args: ["tunnel", "--config", "/etc/cloudflared/config.yaml", "run"]
+          volumeMounts:
+            - name: config
+              mountPath: /etc/cloudflared/config.yaml
+              subPath: config.yaml
+              readOnly: true
+            - name: creds
+              mountPath: /etc/cloudflared/credentials.json
+              subPath: credentials.json
+              readOnly: true
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+      volumes:
+        - name: config
+          configMap:
+            name: cloudflared-config
+        - name: creds
+          secret:
+            secretName: cloudflared-creds
+```
+
+```bash
+kubectl apply -f k8s/cloudflared.yaml
+```
+
+#### 5. WebSocket Support
+
+Cloudflare Tunnels support WebSockets natively. No extra configuration needed for Colyseus connections. The Cloudflare edge automatically detects the `Upgrade: websocket` header and maintains the persistent connection through the tunnel.
+
+Make sure `SDR_CORS_ORIGINS` in the ConfigMap includes `https://sdr.yourdomain.com`.
+
+#### 6. Verify
+
+```bash
+# Check tunnel is connected
+kubectl -n sdr logs deployment/cloudflared
+
+# Test from the internet
+curl https://sdr.yourdomain.com/api/health
+```
+
+### Zero Trust Access Policies (Optional)
+
+If you want to restrict who can access the game server (e.g., only your household):
+
+1. Go to Cloudflare Zero Trust dashboard > Access > Applications
+2. Create an application for `sdr.yourdomain.com`
+3. Add a policy: allow by email, IP range, or device posture
+4. Clients will see a Cloudflare login page before reaching the server
+
+For the Steam Deck loader app, you can either:
+- Exempt the `/api/` and `/games/` paths from the access policy (since the Tauri app handles auth separately)
+- Use a Cloudflare Service Token for machine-to-machine auth (set `CF-Access-Client-Id` and `CF-Access-Client-Secret` headers in the loader)
+
+### Deploying New Games to the Cluster
+
+When the generator runs outside the cluster (e.g., on your dev machine):
+
+```bash
+# Generate the game locally
+ANTHROPIC_API_KEY=sk-ant-... pnpm generate
+
+# Copy the game to the pod's persistent volume
+kubectl -n sdr cp games/2026-02-15 \
+  $(kubectl -n sdr get pod -l app=sdr-server -o name | head -1):/data/games/2026-02-15
+
+# No restart needed, the server loads games dynamically
+```
+
+When the generator runs as a CronJob inside the cluster, it writes directly to the shared PVC and no copy is needed.
+
+### Updating the Server
+
+```bash
+# Rebuild the image
+docker build -t sdr-server:latest .
+
+# Load into cluster (use the command for your cluster type)
+minikube image load sdr-server:latest
+
+# Restart the deployment to pick up the new image
+kubectl -n sdr rollout restart deployment/sdr-server
+kubectl -n sdr rollout status deployment/sdr-server
+```
+
 ## Troubleshooting
 
 **Server won't start**: Check `SDR_GAMES_DIR` exists. The server creates a `games/` directory relative to cwd if not configured. Run `node -e "console.log(process.cwd())"` from the same working directory to verify.
