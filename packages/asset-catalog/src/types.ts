@@ -65,6 +65,10 @@ export interface AssetAnalysisRecord {
   has_transparency: number;
   dominant_colors: string | null;
   confidence: number;
+  frame_width: number | null;
+  frame_height: number | null;
+  frame_count: number | null;
+  is_animation: number;
 }
 
 // Category type
@@ -109,6 +113,22 @@ export interface AssetFileInfo {
   download_count: number;
 }
 
+// Animation detection types
+
+export type AnimationOrientation = "horizontal" | "vertical" | "grid";
+
+export interface AnimationDetectionResult {
+  isAnimationStrip: boolean;
+  frameWidth: number;
+  frameHeight: number;
+  frameCount: number;
+  columns: number;
+  rows: number;
+  orientation: AnimationOrientation;
+  frameSimilarity: number; // 0-1, consecutive frame similarity score
+  confidence: number;
+}
+
 // Analysis types
 
 export interface TileDetectionResult {
@@ -124,6 +144,7 @@ export interface ImageAnalysisResult {
   height: number;
   has_transparency: boolean;
   tile_grid: TileDetectionResult | null;
+  animation: AnimationDetectionResult | null;
   dominant_colors: string[];
   category: AssetCategory;
   confidence: number;

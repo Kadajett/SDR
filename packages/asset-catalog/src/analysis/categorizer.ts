@@ -1,10 +1,11 @@
-import type { AssetCategory, TileDetectionResult } from "../types.js";
+import type { AssetCategory, TileDetectionResult, AnimationDetectionResult } from "../types.js";
 
 export interface CategorizationInput {
   width: number;
   height: number;
   has_transparency: boolean;
   tile_grid: TileDetectionResult | null;
+  animation: AnimationDetectionResult | null;
   tags: string[];
 }
 
@@ -14,7 +15,7 @@ export interface CategorizationResult {
 }
 
 export function categorize(input: CategorizationInput): CategorizationResult {
-  const { width, height, has_transparency, tile_grid, tags } = input;
+  const { width, height, has_transparency, tile_grid, animation, tags } = input;
   const tagSet = new Set(tags.map((t) => t.toLowerCase()));
 
   // Helper to check if any tag matches
@@ -25,7 +26,12 @@ export function categorize(input: CategorizationInput): CategorizationResult {
         [...tagSet].some((t) => t.includes(kw))
     );
 
-  // 1. Tilesheet: tile grid detected, image > 128x128, more than 4 tiles
+  // 0. Animation strip detected with high confidence: always spritesheet
+  if (animation?.isAnimationStrip && animation.confidence > 0.6) {
+    return { category: "spritesheet", confidence: animation.confidence };
+  }
+
+  // 1. Tilesheet: tile grid detected, image > 128x128, more than 4 tiles, NOT an animation
   if (tile_grid && tile_grid.score > 0.6 && width > 128 && height > 128) {
     const totalTiles = tile_grid.columns * tile_grid.rows;
     if (totalTiles > 4) {
@@ -33,13 +39,16 @@ export function categorize(input: CategorizationInput): CategorizationResult {
     }
   }
 
-  // 2. Spritesheet: horizontal strip with transparency, or relevant tags
+  // 2. Spritesheet: horizontal strip with transparency, relevant tags, or animation detected
   const aspectRatio = width / height;
   const isHorizontalStrip = aspectRatio >= 4 && has_transparency;
   const hasSpriteTags = hasTag("sprite", "animation", "spritesheet", "walk", "run", "idle");
+  const hasAnimationSignal = animation != null && animation.frameSimilarity > 0.5;
 
-  if (isHorizontalStrip || (hasSpriteTags && has_transparency)) {
-    const confidence = isHorizontalStrip && hasSpriteTags ? 0.9 : 0.7;
+  if (isHorizontalStrip || (hasSpriteTags && has_transparency) || hasAnimationSignal) {
+    let confidence = 0.7;
+    if (isHorizontalStrip && hasSpriteTags) confidence = 0.9;
+    else if (hasAnimationSignal) confidence = Math.max(0.75, animation!.confidence);
     return { category: "spritesheet", confidence };
   }
 

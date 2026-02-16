@@ -52,7 +52,7 @@ export async function validateSyntax(
         paths: {
           "@sdr/shared": ["../../packages/shared/src/index.ts"],
           "@sdr/engine": ["../../packages/engine/src/index.ts"],
-          "@sdr/server": ["../../packages/server/src/index.ts"],
+          "@sdr/server": ["../../packages/server/src/types.ts"],
         },
       },
       include: ["client/game.ts", "server/room.ts"],

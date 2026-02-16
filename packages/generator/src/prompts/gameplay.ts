@@ -41,7 +41,7 @@ export async function generateGame(
 Generate the following files:
 
 1. \`${CLIENT_MARKER}\` - A complete client scene extending BaseScene, using bitECS 0.4 for entity management
-2. \`${SERVER_MARKER}\` - Server room logic implementing GeneratedRoomLogic with GameState custom data API
+2. \`${SERVER_MARKER}\` - Server room logic implementing GeneratedRoomLogic with RoomContext (import from @sdr/server)
 3. \`${ASSETS_MARKER}\` - Asset manifest (use empty arrays for now, assets will be filled in later)
 4. \`${META_MARKER}\` - Game metadata with these fields:
    { "title": "short catchy name", "description": "1-2 sentence description", "controls": "control scheme description", "howToPlay": "brief rules explanation" }
@@ -54,8 +54,10 @@ The game must:
 - Use frame-rate independent movement (delta time)
 - Show a "How to Play" overlay for 5 seconds at start
 - Use HUD from @sdr/engine for score display, timer, and player list
-- Use state.setCustom/getCustom for all game state on the server (no hardcoded x/y/score on PlayerSchema)
-- Use colored rectangles (this.add.rectangle) for all visuals since actual sprite assets are loaded separately`;
+- Use ctx.state.setCustom/getCustom for all game state on the server (no hardcoded x/y/score on PlayerSchema)
+- Use ctx.broadcast() to push ECS entity data to clients when entity state changes
+- Use this.add.sprite() for catalog assets with colored rectangle fallback for simple shapes
+- Every asset key used in code MUST appear in the assets.json manifest (the validator checks this)`;
 
   if (previousErrors && previousErrors.length > 0) {
     userPrompt += `\n\nThe previous generation attempt had these TypeScript errors. Fix them:\n${previousErrors.join("\n")}`;

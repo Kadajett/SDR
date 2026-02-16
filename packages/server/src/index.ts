@@ -3,15 +3,32 @@ import { WebSocketTransport } from "@colyseus/ws-transport";
 import express from "express";
 import { createServer } from "http";
 import { readdir, readFile } from "fs/promises";
-import { join, resolve } from "path";
-import { SERVER_PORT, GAME_DIR } from "@sdr/shared";
+import { join } from "path";
 import type { GameMetadata } from "@sdr/shared";
 import { GameRoom } from "./rooms/GameRoom.js";
+import { getPort, getGamesDir, getCorsOrigins } from "./config.js";
 
 const app = express();
-const gamesDir = resolve(process.cwd(), "..", "..", GAME_DIR);
+const port = getPort();
+const gamesDir = getGamesDir();
 
 app.use(express.json());
+
+// CORS
+const allowedOrigins = new Set(getCorsOrigins());
+app.use((_req, res, next) => {
+  const origin = _req.headers.origin;
+  if (origin && allowedOrigins.has(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (_req.method === "OPTIONS") {
+    res.sendStatus(204);
+    return;
+  }
+  next();
+});
 
 // Serve generated game assets
 app.use("/games", express.static(gamesDir));
@@ -45,6 +62,11 @@ async function listAllGames(): Promise<GameMetadata[]> {
     return [];
   }
 }
+
+// Health check
+app.get("/api/health", (_req, res) => {
+  res.json({ status: "ok", gamesDir, uptime: process.uptime() });
+});
 
 // API: list available games
 app.get("/api/games", async (_req, res) => {
@@ -83,6 +105,18 @@ const gameServer = new Server({
 // Register the base game room
 gameServer.define("game", GameRoom);
 
-httpServer.listen(SERVER_PORT, () => {
-  console.log(`Game server listening on port ${SERVER_PORT}`);
+httpServer.listen(port, () => {
+  console.log(`Game server listening on port ${port}`);
+  console.log(`Games directory: ${gamesDir}`);
 });
+
+// Graceful shutdown
+function shutdown() {
+  console.log("Shutting down...");
+  gameServer.gracefullyShutdown().then(() => {
+    process.exit(0);
+  });
+}
+
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);

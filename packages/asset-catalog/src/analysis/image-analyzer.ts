@@ -1,5 +1,5 @@
 import sharp from "sharp";
-import type { TileDetectionResult } from "../types.js";
+import type { TileDetectionResult, AnimationDetectionResult, AnimationOrientation } from "../types.js";
 
 // Standard game tile sizes get a scoring bonus
 const STANDARD_TILE_SIZES = new Set([8, 16, 24, 32, 48, 64, 128]);
@@ -220,6 +220,94 @@ function scoreTileGrid(
   if (ratio < 1.2) return 0;
   if (ratio >= 3.0) return 1.0;
   return (ratio - 1.2) / (3.0 - 1.2);
+}
+
+/**
+ * Detect whether an image is an animation strip/grid by analyzing frame similarity.
+ * Uses the tile grid result to find frame boundaries, then compares consecutive
+ * frames via average color histograms. High inter-frame similarity with transparency
+ * suggests an animation strip; low similarity suggests a tilesheet.
+ */
+export function detectAnimationFrames(
+  raw: RawImageData,
+  tileGrid: TileDetectionResult | null
+): AnimationDetectionResult | null {
+  if (!tileGrid) return null;
+
+  const { data, width, channels } = raw;
+  const { tile_width, tile_height, columns, rows } = tileGrid;
+  const frameCount = columns * rows;
+
+  // Need at least 2 frames for animation
+  if (frameCount < 2) return null;
+
+  // Compute average color per frame
+  const frameAverages: Array<{ r: number; g: number; b: number; a: number }> = [];
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < columns; col++) {
+      let rSum = 0, gSum = 0, bSum = 0, aSum = 0;
+      const pixels = tile_width * tile_height;
+
+      for (let py = 0; py < tile_height; py++) {
+        for (let px = 0; px < tile_width; px++) {
+          const x = col * tile_width + px;
+          const y = row * tile_height + py;
+          const idx = (y * width + x) * channels;
+          rSum += data[idx];
+          gSum += data[idx + 1];
+          bSum += data[idx + 2];
+          aSum += channels >= 4 ? data[idx + 3] : 255;
+        }
+      }
+
+      frameAverages.push({
+        r: rSum / pixels,
+        g: gSum / pixels,
+        b: bSum / pixels,
+        a: aSum / pixels,
+      });
+    }
+  }
+
+  // Compute similarity between consecutive frames (0-1, 1 = identical)
+  let totalSimilarity = 0;
+  for (let i = 0; i < frameAverages.length - 1; i++) {
+    const a = frameAverages[i];
+    const b = frameAverages[i + 1];
+    const diff =
+      (Math.abs(a.r - b.r) + Math.abs(a.g - b.g) + Math.abs(a.b - b.b) + Math.abs(a.a - b.a)) / 4;
+    totalSimilarity += 1 - diff / 255;
+  }
+  const avgSimilarity = totalSimilarity / (frameAverages.length - 1);
+
+  // Determine orientation
+  let orientation: AnimationOrientation;
+  if (rows === 1) orientation = "horizontal";
+  else if (columns === 1) orientation = "vertical";
+  else orientation = "grid";
+
+  // Animation strips have high consecutive frame similarity (subtle pose changes)
+  // and typically have transparency. Tilesheets have more varied tiles.
+  const hasTransparency = raw.hasAlpha && frameAverages.some((f) => f.a < 240);
+  const isAnimationStrip = avgSimilarity > 0.7 && hasTransparency;
+
+  // Confidence based on similarity and transparency
+  let confidence = 0;
+  if (isAnimationStrip) {
+    confidence = Math.min(0.5 + avgSimilarity * 0.4 + (hasTransparency ? 0.1 : 0), 1.0);
+  }
+
+  return {
+    isAnimationStrip,
+    frameWidth: tile_width,
+    frameHeight: tile_height,
+    frameCount,
+    columns,
+    rows,
+    orientation,
+    frameSimilarity: Math.round(avgSimilarity * 1000) / 1000,
+    confidence: Math.round(confidence * 1000) / 1000,
+  };
 }
 
 export function extractDominantColors(

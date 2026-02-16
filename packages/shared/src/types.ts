@@ -24,11 +24,23 @@ export interface AssetManifest {
   music: AssetEntry[];
 }
 
+export interface AnimationDef {
+  key: string;
+  startFrame: number;
+  endFrame: number;
+  frameRate: number;
+  repeat: number; // -1 = loop, 0 = once
+}
+
 export interface AssetEntry {
   id: string;
   url: string;
   key: string;
   license: string;
+  frameWidth?: number;
+  frameHeight?: number;
+  frameCount?: number;
+  animations?: AnimationDef[];
 }
 
 export interface PlayerState {

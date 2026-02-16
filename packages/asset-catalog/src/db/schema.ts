@@ -62,7 +62,11 @@ CREATE TABLE IF NOT EXISTS asset_analysis (
   tile_height INTEGER,
   has_transparency INTEGER NOT NULL DEFAULT 0,
   dominant_colors TEXT,
-  confidence REAL NOT NULL DEFAULT 0.0
+  confidence REAL NOT NULL DEFAULT 0.0,
+  frame_width INTEGER,
+  frame_height INTEGER,
+  frame_count INTEGER,
+  is_animation INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_assets_slug ON assets(slug);

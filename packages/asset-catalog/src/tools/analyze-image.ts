@@ -6,6 +6,7 @@ import {
   getRawImageData,
   detectTransparency,
   detectTileGrid,
+  detectAnimationFrames,
   extractDominantColors,
 } from "../analysis/image-analyzer.js";
 import { categorize } from "../analysis/categorizer.js";
@@ -62,12 +63,16 @@ export function registerAnalyzeImage(
         // Get asset tags for categorization
         const tags = queries.getAssetTags(preview.asset_id);
 
+        // Animation detection
+        const animation = detectAnimationFrames(raw, tileGrid);
+
         // Categorize
         const { category, confidence } = categorize({
           width: raw.width,
           height: raw.height,
           has_transparency: hasTransparency,
           tile_grid: tileGrid,
+          animation,
           tags,
         });
 
@@ -76,6 +81,7 @@ export function registerAnalyzeImage(
           height: raw.height,
           has_transparency: hasTransparency,
           tile_grid: tileGrid,
+          animation,
           dominant_colors: dominantColors,
           category,
           confidence,

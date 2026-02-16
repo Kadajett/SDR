@@ -8,9 +8,11 @@
  * Generated room files implement the GeneratedRoomLogic interface
  * which the GameRoom loads dynamically via RoomFactory.
  *
- * This example uses the GameState custom data API:
- * - state.setCustom / getCustom for game-level state
- * - state.setPlayerCustom / getPlayerCustom for per-player state
+ * This example uses the RoomContext API:
+ * - ctx.state.setCustom / getCustom for game-level state
+ * - ctx.state.setPlayerCustom / getPlayerCustom for per-player state
+ * - ctx.broadcast(type, data) to push data to all clients
+ * - ctx.send(sessionId, type, data) to push data to one client
  */
 
 // Type stubs for the server API. In real generated code these
@@ -26,18 +28,25 @@ interface GameState {
   getPlayers(): Array<{ sessionId: string; name: string }>;
 }
 
+interface RoomContext {
+  state: GameState;
+  broadcast(type: string, data: unknown): void;
+  send(sessionId: string, type: string, data: unknown): void;
+  elapsedTime: number;
+}
+
 interface GeneratedRoomLogic {
-  onInit?: (state: GameState) => void;
-  onUpdate: (dt: number, state: GameState) => void;
+  onInit?: (ctx: RoomContext) => void;
+  onUpdate: (dt: number, ctx: RoomContext) => void;
   onPlayerInput?: (
     sessionId: string,
     input: { x: number; y: number; buttons: Record<string, boolean> },
-    state: GameState,
+    ctx: RoomContext,
   ) => void;
-  onPlayerAction: (sessionId: string, action: string, data: unknown, state: GameState) => void;
-  onPlayerJoin?: (sessionId: string, state: GameState) => void;
-  onPlayerLeave?: (sessionId: string, state: GameState) => void;
-  checkWinCondition: (state: GameState) => string | null;
+  onPlayerAction: (sessionId: string, action: string, data: unknown, ctx: RoomContext) => void;
+  onPlayerJoin?: (sessionId: string, ctx: RoomContext) => void;
+  onPlayerLeave?: (sessionId: string, ctx: RoomContext) => void;
+  checkWinCondition: (ctx: RoomContext) => string | null;
 }
 
 const WIN_SCORE = 10;
@@ -67,7 +76,8 @@ function spawnGem(gems: Gem[], nextId: number): { gem: Gem; nextId: number } {
 }
 
 const roomLogic: GeneratedRoomLogic = {
-  onInit(state: GameState): void {
+  onInit(ctx: RoomContext): void {
+    const { state } = ctx;
     state.setCustom("roundTimer", GAME_DURATION);
     state.setCustom("nextGemId", 0);
 
@@ -85,9 +95,13 @@ const roomLogic: GeneratedRoomLogic = {
       state.setPlayerCustom(player.sessionId, "x", 640);
       state.setPlayerCustom(player.sessionId, "y", 400);
     }
+
+    // Broadcast initial gem positions to all clients
+    ctx.broadcast("ecs:sync", { entities: gems });
   },
 
-  onUpdate(dt: number, state: GameState): void {
+  onUpdate(dt: number, ctx: RoomContext): void {
+    const { state } = ctx;
     const timer = state.getCustomOr("roundTimer", GAME_DURATION);
     const newTimer = timer - dt / 1000;
     state.setCustom("roundTimer", Math.max(0, newTimer));
@@ -99,6 +113,7 @@ const roomLogic: GeneratedRoomLogic = {
 
     const gems = state.getCustomOr<Gem[]>("gems", []);
     let nextGemId = state.getCustomOr("nextGemId", 0);
+    let gemsChanged = false;
 
     for (const player of state.getPlayers()) {
       const px = state.getPlayerCustom<number>(player.sessionId, "x") ?? 0;
@@ -122,18 +137,25 @@ const roomLogic: GeneratedRoomLogic = {
         gems.splice(collectedIndices[i], 1);
         const result = spawnGem(gems, nextGemId);
         nextGemId = result.nextId;
+        gemsChanged = true;
       }
     }
 
     state.setCustom("gems", gems);
     state.setCustom("nextGemId", nextGemId);
+
+    // Only broadcast ECS sync when entities changed
+    if (gemsChanged) {
+      ctx.broadcast("ecs:sync", { entities: gems });
+    }
   },
 
   onPlayerInput(
     sessionId: string,
     input: { x: number; y: number; buttons: Record<string, boolean> },
-    state: GameState,
+    ctx: RoomContext,
   ): void {
+    const { state } = ctx;
     const x = state.getPlayerCustom<number>(sessionId, "x") ?? 0;
     const y = state.getPlayerCustom<number>(sessionId, "y") ?? 0;
     const speed = 5;
@@ -145,18 +167,20 @@ const roomLogic: GeneratedRoomLogic = {
     _sessionId: string,
     _action: string,
     _data: unknown,
-    _state: GameState,
+    _ctx: RoomContext,
   ): void {
     // Gem Rush has no discrete actions, input is handled via onPlayerInput
   },
 
-  onPlayerJoin(sessionId: string, state: GameState): void {
+  onPlayerJoin(sessionId: string, ctx: RoomContext): void {
+    const { state } = ctx;
     state.setPlayerCustom(sessionId, "score", 0);
     state.setPlayerCustom(sessionId, "x", 640);
     state.setPlayerCustom(sessionId, "y", 400);
   },
 
-  checkWinCondition(state: GameState): string | null {
+  checkWinCondition(ctx: RoomContext): string | null {
+    const { state } = ctx;
     for (const player of state.getPlayers()) {
       const score = state.getPlayerCustom<number>(player.sessionId, "score") ?? 0;
       if (score >= WIN_SCORE) {

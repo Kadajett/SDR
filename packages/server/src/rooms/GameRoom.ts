@@ -1,6 +1,6 @@
 import { Room, type Client } from "@colyseus/core";
 import { GameState } from "../state/GameState.js";
-import { RoomFactory, type GeneratedRoomLogic } from "./RoomFactory.js";
+import { RoomFactory, type GeneratedRoomLogic, type RoomContext } from "./RoomFactory.js";
 import type { GamePhase } from "@sdr/shared";
 
 export interface GameRoomOptions {
@@ -12,6 +12,24 @@ export class GameRoom extends Room<GameState> {
   maxClients = 5;
   private gamePhase: GamePhase = "lobby";
   private logic: GeneratedRoomLogic | null = null;
+
+  private getContext(): RoomContext {
+    return {
+      state: this.state,
+      broadcast: (type: string, data: unknown) => {
+        this.broadcast(type, data);
+      },
+      send: (sessionId: string, type: string, data: unknown) => {
+        for (const client of this.clients) {
+          if (client.sessionId === sessionId) {
+            client.send(type, data);
+            return;
+          }
+        }
+      },
+      elapsedTime: this.clock.elapsedTime,
+    };
+  }
 
   async onCreate(options: GameRoomOptions): Promise<void> {
     this.setState(new GameState());
@@ -28,20 +46,20 @@ export class GameRoom extends Room<GameState> {
     // Forward input messages to generated logic
     this.onMessage("input", (client, data: { x: number; y: number; buttons: Record<string, boolean> }) => {
       if (this.gamePhase !== "playing" || !this.logic?.onPlayerInput) return;
-      this.logic.onPlayerInput(client.sessionId, data, this.state);
+      this.logic.onPlayerInput(client.sessionId, data, this.getContext());
     });
 
     // Forward action messages to generated logic
     this.onMessage("action", (client, data: { action: string; payload: unknown }) => {
       if (this.gamePhase !== "playing" || !this.logic) return;
-      this.logic.onPlayerAction(client.sessionId, data.action, data.payload, this.state);
+      this.logic.onPlayerAction(client.sessionId, data.action, data.payload, this.getContext());
     });
 
     // Route unknown message types to onPlayerAction as well
     this.onMessage("*", (client, type, data) => {
       if (this.gamePhase !== "playing" || !this.logic) return;
       if (type === "input" || type === "action" || type === "ready") return;
-      this.logic.onPlayerAction(client.sessionId, type as string, data, this.state);
+      this.logic.onPlayerAction(client.sessionId, type as string, data, this.getContext());
     });
 
     this.onMessage("ready", (client, data: { ready: boolean }) => {
@@ -59,7 +77,7 @@ export class GameRoom extends Room<GameState> {
     this.state.addPlayer(client.sessionId, options.name ?? "Player");
 
     if (this.gamePhase === "playing" && this.logic?.onPlayerJoin) {
-      this.logic.onPlayerJoin(client.sessionId, this.state);
+      this.logic.onPlayerJoin(client.sessionId, this.getContext());
     }
   }
 
@@ -67,7 +85,7 @@ export class GameRoom extends Room<GameState> {
     console.log(`Player left: ${client.sessionId}`);
 
     if (this.gamePhase === "playing" && this.logic?.onPlayerLeave) {
-      this.logic.onPlayerLeave(client.sessionId, this.state);
+      this.logic.onPlayerLeave(client.sessionId, this.getContext());
     }
 
     this.state.removePlayer(client.sessionId);
@@ -76,9 +94,10 @@ export class GameRoom extends Room<GameState> {
   private update(dt: number): void {
     if (this.gamePhase !== "playing" || !this.logic) return;
 
-    this.logic.onUpdate(dt, this.state);
+    const ctx = this.getContext();
+    this.logic.onUpdate(dt, ctx);
 
-    const winner = this.logic.checkWinCondition(this.state);
+    const winner = this.logic.checkWinCondition(ctx);
     if (winner) {
       this.gamePhase = "finished";
       this.state.phase = "finished";
@@ -100,7 +119,7 @@ export class GameRoom extends Room<GameState> {
     this.state.phase = "playing";
 
     if (this.logic?.onInit) {
-      this.logic.onInit(this.state);
+      this.logic.onInit(this.getContext());
     }
 
     this.broadcast("game:start", {});

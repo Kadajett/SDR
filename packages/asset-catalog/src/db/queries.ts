@@ -83,8 +83,8 @@ export class CatalogQueries {
     );
 
     this.upsertAnalysisStmt = db.prepare(`
-      INSERT INTO asset_analysis (preview_id, category, width, height, tile_width, tile_height, has_transparency, dominant_colors, confidence)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO asset_analysis (preview_id, category, width, height, tile_width, tile_height, has_transparency, dominant_colors, confidence, frame_width, frame_height, frame_count, is_animation)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(preview_id) DO UPDATE SET
         category = excluded.category,
         width = excluded.width,
@@ -93,7 +93,11 @@ export class CatalogQueries {
         tile_height = excluded.tile_height,
         has_transparency = excluded.has_transparency,
         dominant_colors = excluded.dominant_colors,
-        confidence = excluded.confidence
+        confidence = excluded.confidence,
+        frame_width = excluded.frame_width,
+        frame_height = excluded.frame_height,
+        frame_count = excluded.frame_count,
+        is_animation = excluded.is_animation
     `);
 
     this.getAssetTagsStmt = db.prepare(
@@ -177,7 +181,11 @@ export class CatalogQueries {
       analysis.tile_grid?.tile_height ?? null,
       analysis.has_transparency ? 1 : 0,
       JSON.stringify(analysis.dominant_colors),
-      analysis.confidence
+      analysis.confidence,
+      analysis.animation?.frameWidth ?? null,
+      analysis.animation?.frameHeight ?? null,
+      analysis.animation?.frameCount ?? null,
+      analysis.animation?.isAnimationStrip ? 1 : 0
     );
     this.markPreviewAnalyzedStmt.run(previewId);
   }

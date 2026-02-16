@@ -41,6 +41,48 @@ const input = this.inputManager.getState();
 - Vec2: { x, y }
 - EntityDef: { sprite, physics: "dynamic"|"static"|"none", health?, speed?, effect? }
 
+### Asset Types
+\`\`\`typescript
+interface AssetEntry {
+  id: string;       // catalog asset ID
+  url: string;      // filename relative to assets dir
+  key: string;      // Phaser load key (must be unique)
+  license: string;  // asset license
+  frameWidth?: number;   // for spritesheets: width of each frame in pixels
+  frameHeight?: number;  // for spritesheets: height of each frame in pixels
+  frameCount?: number;   // total number of frames
+  animations?: AnimationDef[];
+}
+
+interface AnimationDef {
+  key: string;        // animation key, e.g. "walk", "idle"
+  startFrame: number; // 0-based
+  endFrame: number;   // inclusive
+  frameRate: number;  // FPS
+  repeat: number;     // -1 = loop, 0 = once
+}
+\`\`\`
+
+### Asset Manifest Example
+\`\`\`json
+{
+  "sprites": [
+    { "id": "bg-01", "url": "background.png", "key": "bg", "license": "CC0" },
+    {
+      "id": "hero-01", "url": "hero-sheet.png", "key": "hero", "license": "CC-BY",
+      "frameWidth": 32, "frameHeight": 32, "frameCount": 12,
+      "animations": [
+        { "key": "hero-idle", "startFrame": 0, "endFrame": 3, "frameRate": 8, "repeat": -1 },
+        { "key": "hero-walk", "startFrame": 4, "endFrame": 11, "frameRate": 12, "repeat": -1 }
+      ]
+    }
+  ],
+  "audio": [],
+  "music": []
+}
+\`\`\`
+For spritesheets, the AssetLoader automatically calls \`load.spritesheet()\` and creates Phaser animations from the manifest. Static images omit the frame fields.
+
 ## bitECS 0.4 (Entity Component System)
 
 ALL games MUST use bitECS for entity management. This keeps game logic data-oriented and efficient.
@@ -145,41 +187,63 @@ this.hud.updateTimer(remainingSeconds);  // displays as MM:SS
 this.hud.updatePlayerList(players);       // sorted leaderboard
 \`\`\`
 
-## Server Room API (Generic State)
+## Server Room API
 
-Generated room logic implements the GeneratedRoomLogic interface. The server provides a GameState object with flexible custom data storage.
+Generated room logic implements the GeneratedRoomLogic interface. All callbacks receive a RoomContext that provides state access AND messaging to clients.
 
-### GameState (passed to all room logic methods)
-- \`state.players\`: MapSchema<PlayerSchema> - Connected players
-- \`state.phase\`: string - Current game phase ("lobby", "playing", "finished")
-- \`state.timer\`: number - Game timer
-
-#### Game-level custom data:
-- \`state.setCustom(key, value)\`: Store any JSON-serializable value
-- \`state.getCustom<T>(key)\`: Retrieve a typed value (returns undefined if missing)
-- \`state.getCustomOr<T>(key, default)\`: Retrieve with fallback default
-
-#### Player-level custom data:
-- \`state.setPlayerCustom(sessionId, key, value)\`: Store data on a specific player
-- \`state.getPlayerCustom<T>(sessionId, key)\`: Retrieve player-specific data
-
-### GeneratedRoomLogic interface
+### RoomContext (passed to all callbacks)
 \`\`\`typescript
-interface GeneratedRoomLogic {
-  onInit?: (state: GameState) => void;
-  onUpdate: (dt: number, state: GameState) => void;
-  onPlayerInput?: (sessionId: string, input: { x: number; y: number; buttons: Record<string, boolean> }, state: GameState) => void;
-  onPlayerAction: (sessionId: string, action: string, data: unknown, state: GameState) => void;
-  onPlayerJoin?: (sessionId: string, state: GameState) => void;
-  onPlayerLeave?: (sessionId: string, state: GameState) => void;
-  checkWinCondition: (state: GameState) => string | null;
+interface RoomContext {
+  state: GameState;                                    // Synchronized game state
+  broadcast(type: string, data: unknown): void;        // Send to ALL clients
+  send(sessionId: string, type: string, data: unknown): void; // Send to ONE client
+  elapsedTime: number;                                 // ms since room creation
 }
 \`\`\`
 
-### Example: Using custom data in a room
+### GameState (via ctx.state)
+- \`ctx.state.players\`: MapSchema<PlayerSchema> - Connected players
+- \`ctx.state.phase\`: string - Current game phase ("lobby", "playing", "finished")
+- \`ctx.state.timer\`: number - Game timer
+
+#### Game-level custom data:
+- \`ctx.state.setCustom(key, value)\`: Store any JSON-serializable value
+- \`ctx.state.getCustom<T>(key)\`: Retrieve a typed value (returns undefined if missing)
+- \`ctx.state.getCustomOr<T>(key, default)\`: Retrieve with fallback default
+
+#### Player-level custom data:
+- \`ctx.state.setPlayerCustom(sessionId, key, value)\`: Store data on a specific player
+- \`ctx.state.getPlayerCustom<T>(sessionId, key)\`: Retrieve player-specific data
+
+### GeneratedRoomLogic interface
+\`\`\`typescript
+import type { GeneratedRoomLogic, RoomContext } from "@sdr/server";
+
+interface GeneratedRoomLogic {
+  onInit?: (ctx: RoomContext) => void;
+  onUpdate: (dt: number, ctx: RoomContext) => void;
+  onPlayerInput?: (sessionId: string, input: { x: number; y: number; buttons: Record<string, boolean> }, ctx: RoomContext) => void;
+  onPlayerAction: (sessionId: string, action: string, data: unknown, ctx: RoomContext) => void;
+  onPlayerJoin?: (sessionId: string, ctx: RoomContext) => void;
+  onPlayerLeave?: (sessionId: string, ctx: RoomContext) => void;
+  checkWinCondition: (ctx: RoomContext) => string | null;
+}
+\`\`\`
+
+### Messaging: Sending ECS / Entity Data to Clients
+Use \`ctx.broadcast()\` and \`ctx.send()\` to push arbitrary data (ECS state, events, entity updates) to clients. The client listens via \`room.onMessage(type, callback)\`.
+
+Common patterns:
+- \`ctx.broadcast("ecs:sync", { entities })\` - Full entity state snapshot
+- \`ctx.broadcast("ecs:spawn", { id, type, x, y })\` - New entity created
+- \`ctx.broadcast("ecs:destroy", { id })\` - Entity removed
+- \`ctx.send(sessionId, "ecs:own", { entityId })\` - Assign entity ownership to one player
+
+### Example: Room with entity sync
 \`\`\`typescript
 const roomLogic: GeneratedRoomLogic = {
-  onInit(state) {
+  onInit(ctx) {
+    const { state } = ctx;
     state.setCustom("gems", []);
     state.setCustom("roundTimer", 180);
     for (const player of state.getPlayers()) {
@@ -187,24 +251,30 @@ const roomLogic: GeneratedRoomLogic = {
       state.setPlayerCustom(player.sessionId, "x", 640);
       state.setPlayerCustom(player.sessionId, "y", 400);
     }
+    // Push initial entity state to all clients
+    ctx.broadcast("ecs:sync", { gems: state.getCustom("gems") });
   },
-  onPlayerInput(sessionId, input, state) {
+  onPlayerInput(sessionId, input, ctx) {
+    const { state } = ctx;
     const x = state.getPlayerCustom<number>(sessionId, "x") ?? 0;
     const y = state.getPlayerCustom<number>(sessionId, "y") ?? 0;
     state.setPlayerCustom(sessionId, "x", x + input.x * 5);
     state.setPlayerCustom(sessionId, "y", y + input.y * 5);
   },
-  onUpdate(dt, state) {
+  onUpdate(dt, ctx) {
+    const { state } = ctx;
     const timer = state.getCustomOr("roundTimer", 180);
     state.setCustom("roundTimer", timer - dt / 1000);
   },
-  onPlayerAction(sessionId, action, data, state) {
+  onPlayerAction(sessionId, action, data, ctx) {
+    const { state } = ctx;
     if (action === "collect") {
       const score = state.getPlayerCustom<number>(sessionId, "score") ?? 0;
       state.setPlayerCustom(sessionId, "score", score + 1);
     }
   },
-  checkWinCondition(state) {
+  checkWinCondition(ctx) {
+    const { state } = ctx;
     for (const player of state.getPlayers()) {
       const score = state.getPlayerCustom<number>(player.sessionId, "score") ?? 0;
       if (score >= 10) return player.sessionId;
@@ -252,7 +322,10 @@ export function launch(containerId: string): { destroy: () => void } {
 4. All game logic must be in a single file extending BaseScene
 5. Server room logic must be in a single file implementing GeneratedRoomLogic
 6. Include clear win/lose conditions
-7. Use state.setCustom/getCustom for all game state. Do NOT assume x, y, or score exist on PlayerSchema.
+7. Use ctx.state.setCustom/getCustom for all game state. Do NOT assume x, y, or score exist on PlayerSchema.
 8. Use onInit to set up initial game state when the game starts
 9. The client file MUST export a \`launch(containerId)\` function (see Game Module Exports above)
+10. Use \`this.add.sprite(x, y, "key")\` for catalog assets. Use colored rectangles (\`this.add.rectangle()\`) as fallback for simple shapes or when no suitable asset exists.
+11. Every asset key referenced in code MUST be present in the assets.json manifest. The asset validator checks for consistency.
+12. For spritesheets, include frameWidth/frameHeight/frameCount in the manifest entry. Animation defs are optional but recommended for animated sprites.
 `;

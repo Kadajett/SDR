@@ -1,9 +1,13 @@
 import { execFile } from "child_process";
 import { promisify } from "util";
+import { join } from "path";
 import { generateGame } from "./prompts/gameplay.js";
 import { validateSyntax } from "./validators/syntax.js";
+import { validateAssets } from "./validators/assets.js";
 import { writeGeneratedGame } from "./templates/game-template.js";
 import { compileGeneratedGame } from "./templates/compile.js";
+import { downloadAssets } from "./assets/downloader.js";
+import type { AssetManifest } from "@sdr/shared";
 
 const exec = promisify(execFile);
 
@@ -41,6 +45,7 @@ async function main() {
     try {
       const result = await generateGame(previousErrors);
 
+      // Step 1: Syntax validation
       const syntaxErrors = await validateSyntax(result.clientCode, result.serverCode);
       if (syntaxErrors.length > 0) {
         console.error("Syntax errors found:", syntaxErrors);
@@ -52,7 +57,44 @@ async function main() {
         throw new Error(`Failed after ${maxRetries} attempts: ${syntaxErrors.join(", ")}`);
       }
 
+      // Step 2: Write game files (creates directory structure)
       const gameDir = await writeGeneratedGame(today, result);
+      const assetsDir = join(gameDir, "assets");
+
+      // Step 3: Download referenced assets
+      const manifest: AssetManifest = JSON.parse(result.assetsManifest);
+      const allEntries = [
+        ...manifest.sprites,
+        ...manifest.audio,
+        ...manifest.music,
+      ];
+
+      if (allEntries.length > 0) {
+        console.log(`Downloading ${allEntries.length} assets...`);
+        await downloadAssets(
+          allEntries
+            .filter((e) => e.url && e.url.startsWith("http"))
+            .map((e) => ({
+              url: e.url,
+              filename: e.url.split("/").pop() || e.key,
+              targetDir: assetsDir,
+            })),
+        );
+      }
+
+      // Step 4: Asset validation
+      const assetErrors = await validateAssets(manifest, result.clientCode, assetsDir);
+      if (assetErrors.length > 0) {
+        console.error("Asset validation errors:", assetErrors);
+        previousErrors = assetErrors;
+        if (attempt < maxRetries) {
+          console.log("Retrying with asset error context...");
+          continue;
+        }
+        throw new Error(`Asset validation failed after ${maxRetries} attempts: ${assetErrors.join(", ")}`);
+      }
+
+      // Step 5: Compile and publish
       await compileGeneratedGame(gameDir);
       console.log(`Game generated successfully: ${result.metadata.title}`);
 
