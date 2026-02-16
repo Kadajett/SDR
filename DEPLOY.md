@@ -210,12 +210,15 @@ pm2 restart sdr-server
 systemctl restart sdr-server
 ```
 
-## Nightly Cronjob Setup
+## Nightly Game Generation: Agent Setup
 
-To generate a new game every night, add a cron entry on the generation machine (can be the same server or a different one):
+The nightly generation can run two ways: as a simple `pnpm generate` script (which calls the Claude API directly via the Anthropic SDK), or as a fully autonomous Claude Code agent that has access to MCP tools, skills, and can self-heal when generation fails. This section covers both approaches.
+
+### Option A: Simple Script (pnpm generate)
+
+The built-in generator script calls the Anthropic API directly (no Claude Code CLI needed). It handles topic randomization, code generation, TypeScript validation with retry, asset validation, esbuild compilation, and git push.
 
 ```bash
-# Requires ANTHROPIC_API_KEY in the environment
 crontab -e
 ```
 
@@ -223,13 +226,270 @@ crontab -e
 0 3 * * * cd /opt/sdr && ANTHROPIC_API_KEY=sk-ant-... pnpm generate >> /var/log/sdr-generate.log 2>&1
 ```
 
-The generator:
-1. Picks 3 random topic words (setting + activity + twist, seeded by date)
-2. Calls Claude API to generate client scene + server room
-3. Runs TypeScript validation (up to 3 retries on errors)
-4. Validates asset manifest against client code
-5. Compiles with esbuild
-6. Commits and pushes to git
+**Required environment:**
+- `ANTHROPIC_API_KEY`: Your Anthropic API key (the generator uses `claude-sonnet-4-5-20250929`)
+- Git configured with push access to the remote (SSH key or credential helper)
+- Node.js 20+, pnpm 9+ installed
+
+This is the simpler option. The generator has built-in retry logic (up to 3 attempts with error context fed back to Claude) and will exit non-zero on failure. No MCP servers or skills are needed since the system prompt and engine API docs are embedded directly in `packages/generator/src/prompts/system.ts`.
+
+### Option B: Claude Code Agent (Full Autonomy)
+
+For more powerful generation with access to the asset catalog, browser automation, and self-healing capabilities, run Claude Code CLI as the cronjob agent. This gives the agent access to MCP tools (asset catalog search, image analysis, Playwright for asset crawling) and project skills (bitECS patterns, Phaser gamedev, Steam Deck controls).
+
+#### 1. Install Claude Code CLI
+
+```bash
+npm install -g @anthropic-ai/claude-code
+```
+
+Verify the installation:
+
+```bash
+claude --version
+```
+
+#### 2. Authenticate
+
+Claude Code needs an Anthropic API key. Set it in the environment where the cronjob will run:
+
+```bash
+# Option 1: Export in the user's shell profile (~/.bashrc, ~/.zshrc)
+export ANTHROPIC_API_KEY="sk-ant-your-key-here"
+
+# Option 2: Pass directly in the cron entry (see below)
+```
+
+#### 3. Configure MCP Servers
+
+The project has a `.mcp.json` at the repo root that defines MCP servers. Claude Code reads this automatically when run from the project directory. The relevant MCP servers are:
+
+**asset-catalog** (required for asset-aware generation):
+- Provides tools: `crawl_search_page`, `crawl_asset_detail`, `download_preview`, `analyze_image`, `catalog_search`, `catalog_stats`, `get_crawl_status`
+- Provides resources: asset catalog stats, recent crawls
+- Uses SQLite database at `./data/asset-catalog/catalog.db`
+- Requires: `better-sqlite3`, `sharp`, `tsx`
+
+**playwright** (optional, for crawling new asset sources):
+- Provides browser automation for crawling opengameart.org and similar sites
+- Only needed if the agent should discover new assets, not for routine generation
+
+The `.mcp.json` file is already in the repo:
+
+```json
+{
+  "mcpServers": {
+    "asset-catalog": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["tsx", "./packages/asset-catalog/src/index.ts"],
+      "env": {
+        "SDR_CATALOG_DATA_DIR": "./data/asset-catalog",
+        "SDR_CRAWL_DELAY_MS": "10000"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--caps=devtools"]
+    }
+  }
+}
+```
+
+If running on a headless server without a display, you can remove the `playwright` entry or install Playwright's headless browser dependencies:
+
+```bash
+npx playwright install --with-deps chromium
+```
+
+#### 4. Project Skills (Automatic)
+
+Claude Code automatically loads skills from `.claude/skills/` when running in the project directory. These skills provide domain expertise for game generation:
+
+| Skill | Purpose |
+|-------|---------|
+| `phaser-gamedev` | Phaser 3 scene lifecycle, physics, sprites, tilemaps |
+| `bitecs` | bitECS 0.4 entity component system patterns |
+| `steamdeck-controls` | Steam Deck gamepad mapping, W3C Gamepad API |
+| `game-generation-guidelines` | Full coding constraints and templates for generated games |
+| `example-game` | Reference implementation (Grassland Gem Rush) showing correct engine usage |
+
+No manual configuration needed. The agent reads these automatically.
+
+#### 5. Project Instructions (CLAUDE.md)
+
+The project has a `.claude/CLAUDE.md` that tells the agent about the monorepo structure, conventions, commands, and generation architecture. This is loaded automatically. The agent will also read the root `CLAUDE.md` from the user's home directory if present.
+
+#### 6. Git Configuration
+
+The agent needs to commit and push generated games. Configure git on the server:
+
+```bash
+# Set identity for commits
+git config --global user.name "SDR Generator"
+git config --global user.email "sdr-bot@yourdomain.com"
+
+# SSH key for push access (recommended)
+ssh-keygen -t ed25519 -f ~/.ssh/sdr_deploy -N ""
+# Add the public key as a deploy key on your GitHub repo (with write access)
+
+# Or use a GitHub personal access token
+git config --global credential.helper store
+echo "https://oauth2:ghp_your_token@github.com" > ~/.git-credentials
+```
+
+#### 7. The Cronjob
+
+The agent runs with `--dangerously-skip-permissions` so it can execute tools (bash commands, file writes, MCP calls) without interactive approval prompts. The `-p` flag sends a prompt directly instead of opening interactive mode.
+
+```bash
+crontab -e
+```
+
+```cron
+# Run at 3 AM daily. Agent generates a game with full tool access.
+0 3 * * * cd /opt/sdr && ANTHROPIC_API_KEY=sk-ant-... claude --dangerously-skip-permissions -p "Generate tonight's game. Follow these steps:
+
+1. Run 'pnpm generate' to generate, validate, compile, and publish today's game.
+2. If the generation fails, read the error output carefully.
+3. If it's a TypeScript error in the generated code, the script has built-in retry (3 attempts). Let it finish.
+4. If it's an infrastructure error (missing dependency, network issue, git push failure), diagnose and fix it, then re-run 'pnpm generate'.
+5. If the game was generated but assets are missing or broken, use the asset-catalog MCP tools (catalog_search, analyze_image) to find suitable replacements, update the assets.json, re-download, and re-compile.
+6. After successful generation, verify the game exists at games/YYYY-MM-DD/ with client/game.js, server/room.js, and metadata.json.
+7. If everything looks good, confirm the git push went through.
+
+Do not modify any code outside of the games/ directory. Do not modify engine, server, shared, or generator package code." >> /var/log/sdr-agent.log 2>&1
+```
+
+**Flags explained:**
+- `--dangerously-skip-permissions`: Allows all tool calls without interactive approval. Required for unattended operation.
+- `-p "..."`: Sends the prompt directly (non-interactive mode). The agent processes the prompt, executes the task, and exits.
+
+#### 8. Alternative: Wrapper Script
+
+For cleaner cron entries and better logging, use a wrapper script:
+
+```bash
+cat > /opt/sdr/scripts/nightly-generate.sh << 'SCRIPT'
+#!/bin/bash
+set -euo pipefail
+
+LOG_DIR="/var/log/sdr"
+mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/generate-$(date +%Y-%m-%d).log"
+
+cd /opt/sdr
+
+echo "=== Generation started at $(date) ===" >> "$LOG_FILE"
+
+# Source environment (API key, PATH for node/pnpm)
+source /etc/sdr/env.sh
+
+# Option A: Simple script
+# pnpm generate >> "$LOG_FILE" 2>&1
+
+# Option B: Claude Code agent with full tool access
+claude --dangerously-skip-permissions -p "$(cat <<'PROMPT'
+Generate tonight's game using 'pnpm generate'. If it fails with infrastructure
+errors (not TypeScript errors, which are retried automatically), diagnose and fix
+the issue, then retry. Use asset-catalog MCP tools if assets need replacement.
+Verify the final output exists in games/YYYY-MM-DD/ with all required files.
+Do not modify code outside the games/ directory.
+PROMPT
+)" >> "$LOG_FILE" 2>&1
+
+EXIT_CODE=$?
+echo "=== Generation finished at $(date) with exit code $EXIT_CODE ===" >> "$LOG_FILE"
+
+# Optional: notify on failure
+if [ $EXIT_CODE -ne 0 ]; then
+  echo "SDR generation failed on $(date). Check $LOG_FILE" | \
+    mail -s "SDR Generation Failed" admin@yourdomain.com 2>/dev/null || true
+fi
+
+exit $EXIT_CODE
+SCRIPT
+
+chmod +x /opt/sdr/scripts/nightly-generate.sh
+```
+
+Environment file:
+
+```bash
+cat > /etc/sdr/env.sh << 'ENV'
+export ANTHROPIC_API_KEY="sk-ant-your-key-here"
+export PATH="/usr/local/bin:/usr/bin:$HOME/.local/bin:$PATH"
+export NODE_ENV="production"
+ENV
+
+chmod 600 /etc/sdr/env.sh
+```
+
+Cron entry:
+
+```cron
+0 3 * * * /opt/sdr/scripts/nightly-generate.sh
+```
+
+#### 9. What the Agent Has Access To
+
+Summary of everything available to the Claude Code agent when it runs from `/opt/sdr`:
+
+| Resource | Location | Purpose |
+|----------|----------|---------|
+| Project instructions | `.claude/CLAUDE.md` | Monorepo structure, conventions, commands |
+| Skills (5) | `.claude/skills/` | Phaser, bitECS, controls, generation guidelines, example game |
+| MCP: asset-catalog | `.mcp.json` | Search/analyze game art assets in the catalog DB |
+| MCP: playwright | `.mcp.json` | Browser automation for crawling new asset sources |
+| Generator script | `packages/generator/` | Claude API call, validation, compilation, git push |
+| System prompt | `packages/generator/src/prompts/system.ts` | Full engine API docs embedded in the generation prompt |
+| Asset catalog DB | `data/asset-catalog/catalog.db` | SQLite database of crawled game art |
+| Example game | `packages/generator/src/examples/` | Reference implementation (Grassland Gem Rush) |
+| Topic randomizer | `packages/generator/src/randomizer/` | 168 settings x 175 activities x 158 twists |
+
+#### 10. Monitoring and Failure Recovery
+
+**Log rotation:**
+
+```bash
+cat > /etc/logrotate.d/sdr << 'EOF'
+/var/log/sdr/*.log {
+    daily
+    rotate 30
+    compress
+    missingok
+    notifempty
+}
+EOF
+```
+
+**Manual re-generation** (if the nightly run failed):
+
+```bash
+# Simple script
+cd /opt/sdr && ANTHROPIC_API_KEY=sk-ant-... pnpm generate
+
+# Or with the agent (interactive, so you can watch)
+cd /opt/sdr && claude -p "Run pnpm generate and fix any issues"
+
+# Or fully interactive
+cd /opt/sdr && claude
+# Then type: "Generate today's game"
+```
+
+**Check if today's game exists:**
+
+```bash
+curl http://localhost:2567/api/games/current
+# Returns metadata JSON or 404 if no game for today
+```
+
+**Force re-generation for a specific date** (the generator always uses today's date, so you can only re-generate today's game by deleting it first):
+
+```bash
+rm -rf /opt/sdr/games/$(date +%Y-%m-%d)
+cd /opt/sdr && pnpm generate
+```
 
 ## Reverse Proxy (nginx)
 
