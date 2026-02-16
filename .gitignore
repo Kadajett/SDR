@@ -3,9 +3,6 @@ dist/
 .turbo/
 *.tsbuildinfo
 
-# Generated games
-games/
-
 # Runtime data (asset catalog DB, preview images)
 data/
 
