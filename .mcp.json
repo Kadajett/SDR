@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "asset-catalog": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["tsx", "./packages/asset-catalog/src/index.ts"],
+      "env": {
+        "SDR_CATALOG_DATA_DIR": "./data/asset-catalog",
+        "SDR_CRAWL_DELAY_MS": "10000"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--caps=devtools"
+      ]
+    }
+  }
+}

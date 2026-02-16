@@ -1,0 +1,23 @@
+{
+  "name": "steam-deck-randomizer",
+  "private": true,
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev:server": "pnpm --filter @sdr/server dev",
+    "dev:loader": "pnpm --filter @sdr/loader dev",
+    "generate": "pnpm --filter @sdr/generator generate",
+    "typecheck": "pnpm -r typecheck",
+    "clean": "pnpm -r clean"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild",
+      "msgpackr-extract",
+      "sharp"
+    ]
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

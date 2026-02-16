@@ -1,0 +1,24 @@
+{
+  "name": "@sdr/generator",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "tsx src/index.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@sdr/engine": "workspace:*",
+    "@sdr/shared": "workspace:*",
+    "bitecs": "^0.4.0",
+    "esbuild": "^0.27.3"
+  },
+  "devDependencies": {
+    "phaser": "^3.90.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

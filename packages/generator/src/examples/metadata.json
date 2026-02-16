@@ -1,0 +1,17 @@
+{
+  "id": "example",
+  "date": "example",
+  "title": "Grassland Gem Rush",
+  "description": "Race to collect golden gems scattered across a grassland map. Avoid trees and rocks. First to 10 gems wins!",
+  "genre": "collection",
+  "theme": "medieval",
+  "playerCount": { "min": 2, "max": 5 },
+  "controls": "Left stick / WASD to move. Collect gems by running into them.",
+  "howToPlay": "Collect golden gems! First to 10 wins, or highest score when time runs out. Avoid water, trees, and rocks.",
+  "assets": {
+    "sprites": [],
+    "audio": [],
+    "music": []
+  },
+  "_note": "This example uses colored rectangles as primitives. Real games will reference assets from the catalog."
+}

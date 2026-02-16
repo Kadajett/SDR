@@ -1,0 +1,9 @@
+export { BaseGame } from "./core/Game.js";
+export { BaseScene } from "./core/Scene.js";
+export { InputManager } from "./core/InputManager.js";
+export { AssetLoader } from "./core/AssetLoader.js";
+export { MultiplayerClient } from "./net/MultiplayerClient.js";
+export { StateSync } from "./net/StateSync.js";
+export { PhysicsHelpers } from "./physics/PhysicsHelpers.js";
+export { HUD } from "./ui/HUD.js";
+export { Lobby } from "./ui/Lobby.js";
