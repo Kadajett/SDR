@@ -55,7 +55,7 @@ The code block labels MUST be exactly as shown above. Do not use any other forma
 ### BaseScene (extend this for client game scenes)
 
 \`\`\`typescript
-import { BaseScene, InputManager, HUD } from "@sdr/engine";
+import { BaseScene, InputManager, MultiplayerClient, HUD } from "@sdr/engine";
 import type { PlayerState, EntityDef } from "@sdr/shared";
 \`\`\`
 
@@ -79,6 +79,40 @@ BaseScene provides:
 - \`this.spawnEntity(key, { x, y })\`: Create a Phaser sprite from entities definition
 - \`this.onCollision(a, b)\`: Override to handle collisions (optional)
 - \`this.onPlayerJoin(player)\` / \`this.onPlayerLeave(sessionId)\`: Override for player tracking (optional, base impl manages this.players)
+
+### MultiplayerClient (for sending input/actions to the server)
+
+The client scene does NOT have a room property. To send input and actions to the Colyseus server, use \`MultiplayerClient\` — it is passed in via the web client launcher and stored on the scene:
+
+\`\`\`typescript
+import { BaseScene, InputManager, MultiplayerClient, HUD } from "@sdr/engine";
+
+class MyGame extends BaseScene {
+  private mpClient: MultiplayerClient | null = null;
+  private inputManager!: InputManager;
+
+  // Called by the launcher after Colyseus connects
+  setMultiplayerClient(client: MultiplayerClient): void {
+    this.mpClient = client;
+  }
+
+  create(): void {
+    this.inputManager = new InputManager(this);
+    this.inputManager.setup({ space: "SPACE", action: "Z" });
+    // ... set up game objects
+  }
+
+  onUpdate(dt: number, players: PlayerState[]): void {
+    const input = this.inputManager.getState();
+    // Send input to server every frame
+    this.mpClient?.sendInput(input);
+    // Send a game action
+    this.mpClient?.sendAction("shoot", { x: 100, y: 200 });
+  }
+}
+\`\`\`
+
+**Key rule: NEVER use \`this.room\` — it does not exist on BaseScene. Always use \`this.mpClient\` (typed as \`MultiplayerClient | null\`) that you declare yourself and call \`setMultiplayerClient()\` on.**
 
 BaseScene is a Phaser.Scene, so use standard Phaser lifecycle:
 - \`constructor() { super({ key: "MyGame" }); }\`
@@ -316,11 +350,12 @@ Use empty arrays unless you have specific catalog assets. Use colored rectangles
 8. The client file MUST export a \`launch(containerId)\` function AND default export the scene class
 9. Use colored rectangles for all visuals (no external assets needed)
 10. Every asset key referenced in code MUST be present in the assets.json manifest
-11. NEVER use \`this.room\` — BaseScene has NO room property. There is NO Colyseus room/client on the client scene. The client is a standalone Phaser game. All multiplayer sync happens via the server room logic separately.
+11. NEVER use \`this.room\` — BaseScene has NO room property. Use \`this.mpClient\` (a \`MultiplayerClient | null\` you declare on the scene) to send input/actions. Call \`this.mpClient?.sendInput(input)\` in onUpdate.
 12. Do NOT use defineQuery — it does not exist in bitECS 0.4, use query() directly
 13. Use \`import type { GeneratedRoomLogic, RoomContext } from "@sdr/server"\` in server room files
-14. Do NOT import or reference MultiplayerClient, Colyseus, or any networking on the client side. The client scene is purely local Phaser + bitECS.
+14. For networking on the client, import ONLY \`MultiplayerClient\` from "@sdr/engine". Do NOT import from "colyseus.js" directly.
 15. All function parameters and variables must have explicit types (strict mode is enabled)
+16. Always declare \`private mpClient: MultiplayerClient | null = null;\` on the scene class and implement \`setMultiplayerClient(client: MultiplayerClient): void { this.mpClient = client; }\`
 `;
 
 /** @deprecated Use buildSystemPrompt() instead */
