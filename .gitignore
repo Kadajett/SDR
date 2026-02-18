@@ -22,4 +22,8 @@ Thumbs.db
 .idea/
 
 # Debug/test screenshots
-*.png
+/tmp/*.png
+*.screenshot.png
+
+# But DO track game assets
+!games/*/assets/*.png
