@@ -1,259 +1,170 @@
 // games/2026-02-18/server/room.ts
-var nextEntityId = 1;
-var roundTimer = 0;
-var ROUND_DURATION = 120;
-function createStone(x, y, dx, dy, ownerId, power) {
-  return {
-    id: nextEntityId++,
+var nextEid = 1;
+var stones = /* @__PURE__ */ new Map();
+var playerPositions = /* @__PURE__ */ new Map();
+function distance(x1, y1, x2, y2) {
+  return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+}
+function getClosestStone(ctx) {
+  const targetX = 640;
+  const targetY = 150;
+  let closest = null;
+  for (const stone of stones.values()) {
+    const dist = distance(stone.x, stone.y, targetX, targetY);
+    if (!closest || dist < closest.distance) {
+      closest = { sessionId: stone.ownerId, distance: dist };
+    }
+  }
+  return closest;
+}
+function broadcastEntities(ctx) {
+  const entities = Array.from(stones.values()).map((stone) => ({
+    eid: stone.eid,
+    x: stone.x,
+    y: stone.y,
+    dx: stone.dx,
+    dy: stone.dy,
     type: "stone",
-    x,
-    y,
-    dx,
-    dy,
-    ownerId,
-    size: 1,
-    power
-  };
-}
-function createRay(x, y, ownerId) {
-  return {
-    id: nextEntityId++,
-    type: "ray",
-    x,
-    y,
-    ownerId,
-    active: true
-  };
-}
-function getEntities(ctx) {
-  return ctx.state.getCustomOr("entities", []);
-}
-function setEntities(ctx, entities) {
-  ctx.state.setCustom("entities", entities);
-}
-function calculateScore(stone) {
-  const centerX = 640;
-  const centerY = 200;
-  const distance = Math.sqrt(
-    Math.pow(stone.x - centerX, 2) + Math.pow(stone.y - centerY, 2)
-  );
-  if (distance < 30) return 20;
-  if (distance < 60) return 10;
-  if (distance < 100) return 5;
-  return 0;
-}
-function checkCollision(a, b) {
-  const dx = a.x - b.x;
-  const dy = a.y - b.y;
-  const distance = Math.sqrt(dx * dx + dy * dy);
-  const minDist = (a.size + b.size) * 16;
-  return distance < minDist;
-}
-function resolveCollision(a, b) {
-  const dx = b.x - a.x;
-  const dy = b.y - a.y;
-  const distance = Math.sqrt(dx * dx + dy * dy);
-  if (distance === 0) return;
-  const nx = dx / distance;
-  const ny = dy / distance;
-  const relativeVelX = a.dx - b.dx;
-  const relativeVelY = a.dy - b.dy;
-  const impulse = relativeVelX * nx + relativeVelY * ny;
-  if (impulse < 0) return;
-  const massA = a.size * a.size;
-  const massB = b.size * b.size;
-  const totalMass = massA + massB;
-  const impulseA = 2 * massB * impulse / totalMass;
-  const impulseB = 2 * massA * impulse / totalMass;
-  a.dx -= impulseA * nx * 0.8;
-  a.dy -= impulseA * ny * 0.8;
-  b.dx += impulseB * nx * 0.8;
-  b.dy += impulseB * ny * 0.8;
+    ownerId: stone.ownerId,
+    power: stone.power,
+    growing: stone.growing
+  }));
+  ctx.broadcast("entityUpdate", entities);
 }
 var roomLogic = {
   onInit(ctx) {
-    ctx.state.setCustom("entities", []);
-    ctx.state.setCustom("roundTimer", ROUND_DURATION);
-    roundTimer = ROUND_DURATION;
-    for (const player of ctx.state.getPlayers()) {
-      ctx.state.setPlayerCustom(player.sessionId, "canShoot", true);
-      ctx.state.setPlayerCustom(player.sessionId, "chargePower", 0);
-    }
+    ctx.state.setCustom("round", 1);
+    ctx.state.setCustom("maxRounds", 3);
+    ctx.state.setCustom("roundTimer", 45);
+    ctx.state.setCustom("targetX", 640);
+    ctx.state.setCustom("targetY", 150);
+    const players = ctx.state.getPlayers();
+    const spacing = 1200 / (players.length + 1);
+    players.forEach((player, index) => {
+      const x = 40 + spacing * (index + 1);
+      const y = 750;
+      ctx.state.setPlayerCustom(player.sessionId, "x", x);
+      ctx.state.setPlayerCustom(player.sessionId, "y", y);
+      ctx.state.setPlayerCustom(player.sessionId, "hasThrown", false);
+      ctx.state.setPlayerCustom(player.sessionId, "growthRayUsed", false);
+      playerPositions.set(player.sessionId, { x, y });
+    });
   },
   onUpdate(dt, ctx) {
-    const entities = getEntities(ctx);
-    const stones = entities.filter((e) => e.type === "stone");
-    const rays = entities.filter((e) => e.type === "ray");
-    roundTimer -= dt;
-    ctx.state.setCustom("roundTimer", Math.max(0, roundTimer));
-    for (const stone of stones) {
+    const roundTimer = ctx.state.getCustom("roundTimer") || 45;
+    const newTimer = Math.max(0, roundTimer - dt);
+    ctx.state.setCustom("roundTimer", newTimer);
+    for (const stone of stones.values()) {
       stone.x += stone.dx * dt;
       stone.y += stone.dy * dt;
-      stone.dx *= 0.98;
-      stone.dy *= 0.98;
-      if (Math.abs(stone.dx) < 0.1 && Math.abs(stone.dy) < 0.1) {
+      const friction = 0.98;
+      stone.dx *= friction;
+      stone.dy *= friction;
+      if (Math.abs(stone.dx) < 1 && Math.abs(stone.dy) < 1) {
         stone.dx = 0;
         stone.dy = 0;
       }
-      if (stone.x < 100 || stone.x > 1180) {
-        stone.dx *= -0.5;
-        stone.x = Math.max(100, Math.min(1180, stone.x));
+      if (stone.x < 40 || stone.x > 1240) {
+        stone.dx = 0;
+        stone.x = Math.max(40, Math.min(1240, stone.x));
       }
-      if (stone.y < 100 || stone.y > 700) {
-        stone.dy *= -0.5;
-        stone.y = Math.max(100, Math.min(700, stone.y));
+      if (stone.y < 50 || stone.y > 750) {
+        stone.dy = 0;
+        stone.y = Math.max(50, Math.min(750, stone.y));
       }
-    }
-    for (let i = 0; i < stones.length; i++) {
-      for (let j = i + 1; j < stones.length; j++) {
-        if (checkCollision(stones[i], stones[j])) {
-          resolveCollision(stones[i], stones[j]);
-          ctx.broadcast("stoneCollision", {
-            a: stones[i].id,
-            b: stones[j].id
-          });
-        }
+      if (stone.growing) {
+        stone.power = Math.min(1, stone.power + dt * 0.5);
       }
     }
-    for (const ray of rays) {
-      if (ray.active) {
-        const playerStones = stones.filter(
-          (s) => s.ownerId === ray.ownerId
-        );
-        for (const stone of playerStones) {
-          stone.size = Math.min(2.5, stone.size + dt * 0.5);
-        }
-      }
-    }
-    const activeRays = rays.filter((r) => {
-      if (!r.active) {
-        const timeSinceInactive = ctx.elapsedTime;
-        return timeSinceInactive < 2;
-      }
-      return true;
-    });
-    const allStopped = stones.every(
-      (s) => s.dx === 0 && s.dy === 0
+    const players = ctx.state.getPlayers();
+    const allThrown = players.every(
+      (p) => ctx.state.getPlayerCustom(p.sessionId, "hasThrown") === true
     );
-    if (allStopped && stones.length > 0) {
-      for (const player of ctx.state.getPlayers()) {
-        const playerStones = stones.filter(
-          (s) => s.ownerId === player.sessionId
-        );
-        let totalScore = 0;
-        for (const stone of playerStones) {
-          totalScore += calculateScore(stone);
+    if (newTimer <= 0 || allThrown) {
+      const closest = getClosestStone(ctx);
+      if (closest) {
+        const winner = players.find((p) => p.sessionId === closest.sessionId);
+        if (winner) {
+          const currentScore = ctx.state.getCustom(`score_${winner.sessionId}`) || 0;
+          ctx.state.setCustom(`score_${winner.sessionId}`, currentScore + 1);
         }
-        ctx.state.setPlayerCustom(player.sessionId, "score", totalScore);
+      }
+      const round = ctx.state.getCustom("round") || 1;
+      const maxRounds = ctx.state.getCustom("maxRounds") || 3;
+      if (round >= maxRounds) {
+        ctx.state.phase = "finished";
+      } else {
+        ctx.state.setCustom("round", round + 1);
+        ctx.state.setCustom("roundTimer", 45);
+        stones.clear();
+        players.forEach((player) => {
+          ctx.state.setPlayerCustom(player.sessionId, "hasThrown", false);
+          ctx.state.setPlayerCustom(player.sessionId, "growthRayUsed", false);
+        });
+        ctx.broadcast("clearStones", {});
       }
     }
-    setEntities(ctx, [...stones, ...activeRays]);
-    ctx.broadcast("stateUpdate", { entities: getEntities(ctx) });
-  },
-  onPlayerInput(sessionId, input, ctx) {
-    const canShoot = ctx.state.getPlayerCustom(sessionId, "canShoot");
-    if (!canShoot) return;
-    ctx.state.setPlayerCustom(sessionId, "aimX", input.x);
-    ctx.state.setPlayerCustom(sessionId, "aimY", input.y);
+    broadcastEntities(ctx);
   },
   onPlayerAction(sessionId, action, data, ctx) {
-    if (action === "charge") {
-      const { power } = data;
-      ctx.state.setPlayerCustom(sessionId, "chargePower", power);
-    } else if (action === "shoot") {
-      const canShoot = ctx.state.getPlayerCustom(
-        sessionId,
-        "canShoot"
-      );
-      if (!canShoot) return;
-      const { dx, dy } = data;
-      const power = ctx.state.getPlayerCustom(
-        sessionId,
-        "chargePower"
-      ) || 0.5;
-      const playerIndex = ctx.state.getPlayers().findIndex((p) => p.sessionId === sessionId);
-      const startX = 640 + (playerIndex - 1) * 100;
-      const startY = 700;
-      const speed = 300 + power * 200;
-      const magnitude = Math.sqrt(dx * dx + dy * dy);
-      const normalizedDx = magnitude > 0 ? dx / magnitude : 0;
-      const normalizedDy = magnitude > 0 ? dy / magnitude : -1;
-      const stone = createStone(
-        startX,
-        startY,
-        normalizedDx * speed,
-        normalizedDy * speed,
-        sessionId,
-        power
-      );
-      const entities = getEntities(ctx);
-      entities.push(stone);
-      setEntities(ctx, entities);
-      ctx.state.setPlayerCustom(sessionId, "canShoot", false);
-      ctx.state.setPlayerCustom(sessionId, "chargePower", 0);
-      setTimeout(() => {
-        ctx.state.setPlayerCustom(sessionId, "canShoot", true);
-      }, 5e3);
-    } else if (action === "fireRay") {
-      const entities = getEntities(ctx);
-      const playerStones = entities.filter(
-        (e) => e.type === "stone" && e.ownerId === sessionId
-      );
-      if (playerStones.length > 0) {
-        const targetStone = playerStones[0];
-        const ray = createRay(targetStone.x, targetStone.y, sessionId);
-        entities.push(ray);
-        setEntities(ctx, entities);
-        setTimeout(() => {
-          const currentEntities = getEntities(ctx);
-          const rayIndex = currentEntities.findIndex(
-            (e) => e.type === "ray" && e.id === ray.id
-          );
-          if (rayIndex !== -1) {
-            const foundRay = currentEntities[rayIndex];
-            foundRay.active = false;
-          }
-          setEntities(ctx, currentEntities);
-        }, 2e3);
+    if (action === "throwStone") {
+      const hasThrown = ctx.state.getPlayerCustom(sessionId, "hasThrown");
+      if (hasThrown) return;
+      const payload = data;
+      const power = payload.power;
+      const x = ctx.state.getPlayerCustom(sessionId, "x") || 640;
+      const y = ctx.state.getPlayerCustom(sessionId, "y") || 750;
+      const eid = nextEid++;
+      const stone = {
+        eid,
+        x,
+        y,
+        dx: 0,
+        dy: -power * 400,
+        ownerId: sessionId,
+        power: 0.2,
+        growing: false
+      };
+      stones.set(eid, stone);
+      ctx.state.setPlayerCustom(sessionId, "hasThrown", true);
+      broadcastEntities(ctx);
+    } else if (action === "activateGrowthRay") {
+      const growthRayUsed = ctx.state.getPlayerCustom(sessionId, "growthRayUsed");
+      if (growthRayUsed) return;
+      for (const stone of stones.values()) {
+        if (stone.ownerId === sessionId) {
+          stone.growing = true;
+          ctx.state.setPlayerCustom(sessionId, "growthRayUsed", true);
+          break;
+        }
       }
     }
   },
   onPlayerJoin(sessionId, ctx) {
-    ctx.state.setPlayerCustom(sessionId, "score", 0);
-    ctx.state.setPlayerCustom(sessionId, "canShoot", true);
-    ctx.state.setPlayerCustom(sessionId, "chargePower", 0);
-    ctx.state.setPlayerCustom(sessionId, "aimX", 0);
-    ctx.state.setPlayerCustom(sessionId, "aimY", -1);
-  },
-  onPlayerLeave(sessionId, ctx) {
-    const entities = getEntities(ctx);
-    const filteredEntities = entities.filter((e) => {
-      if (e.type === "stone") {
-        return e.ownerId !== sessionId;
-      }
-      if (e.type === "ray") {
-        return e.ownerId !== sessionId;
-      }
-      return true;
-    });
-    setEntities(ctx, filteredEntities);
+    const players = ctx.state.getPlayers();
+    const index = players.findIndex((p) => p.sessionId === sessionId);
+    const spacing = 1200 / (players.length + 1);
+    const x = 40 + spacing * (index + 1);
+    const y = 750;
+    ctx.state.setPlayerCustom(sessionId, "x", x);
+    ctx.state.setPlayerCustom(sessionId, "y", y);
+    ctx.state.setPlayerCustom(sessionId, "hasThrown", false);
+    ctx.state.setPlayerCustom(sessionId, "growthRayUsed", false);
+    playerPositions.set(sessionId, { x, y });
   },
   checkWinCondition(ctx) {
+    if (ctx.state.phase !== "finished") return null;
     const players = ctx.state.getPlayers();
-    const scores = players.map((p) => ({
-      sessionId: p.sessionId,
-      score: ctx.state.getPlayerCustom(p.sessionId, "score") || 0
-    }));
-    const maxScore = Math.max(...scores.map((s) => s.score));
-    if (maxScore >= 50) {
-      const winner = scores.find((s) => s.score === maxScore);
-      return winner ? winner.sessionId : null;
+    let winner = null;
+    let maxScore = -1;
+    for (const player of players) {
+      const score = ctx.state.getCustom(`score_${player.sessionId}`) || 0;
+      if (score > maxScore) {
+        maxScore = score;
+        winner = player.sessionId;
+      }
     }
-    if (roundTimer <= 0) {
-      const winner = scores.find((s) => s.score === maxScore);
-      return winner ? winner.sessionId : null;
-    }
-    return null;
+    return winner;
   }
 };
 var room_default = roomLogic;

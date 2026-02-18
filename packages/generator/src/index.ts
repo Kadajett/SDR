@@ -15,7 +15,7 @@ const exec = promisify(execFile);
 async function gitPublish(date: string, title: string): Promise<void> {
   const cwd = process.cwd();
   // Navigate to workspace root (generator runs from packages/generator)
-  const root = new URL("../../../..", import.meta.url).pathname;
+  const root = join(process.cwd(), "..", "..");
 
   const run = (cmd: string, args: string[]) =>
     exec(cmd, args, { cwd: root });
@@ -105,9 +105,39 @@ async function main() {
         throw new Error(`Asset validation failed after ${maxRetries} attempts: ${assetErrors.join(", ")}`);
       }
 
-      // Step 5: Compile and publish
+      // Step 5: Compile
       await compileGeneratedGame(gameDir);
-      console.log(`Game generated successfully: ${result.metadata.title}`);
+      console.log(`Game compiled successfully: ${result.metadata.title}`);
+
+      // Step 6: Playwright visual verification (if available)
+      try {
+        const verifyScript = join(process.cwd(), "..", "..", "scripts", "verify-game.mjs");
+        const { existsSync: verifyExists } = await import("fs");
+        if (verifyExists(verifyScript)) {
+          console.log("Running Playwright visual verification...");
+          const verifyResult = await exec("node", [verifyScript], {
+            env: { ...process.env, GAME_URL: `http://sdr.tailf93a13.ts.net/`, SCREENSHOT_PATH: `/tmp/game-verify-${today}.png` },
+          });
+          console.log(verifyResult.stdout);
+          if (verifyResult.stderr) console.warn(verifyResult.stderr);
+          console.log("Visual verification passed!");
+        } else {
+          console.warn("Playwright verify script not found, skipping visual verification");
+        }
+      } catch (verifyErr: unknown) {
+        const errMsg = verifyErr instanceof Error ? verifyErr.message : String(verifyErr);
+        console.error("Visual verification failed:", errMsg);
+        previousErrors = [
+          `Previous attempt failed visual verification: sprites not loading. ` +
+          `Make sure asset paths start with /games/${today}/assets/ and you're using this.load.image() in preload(). ` +
+          `Use at least 2 assets from the catalog.`
+        ];
+        if (attempt < maxRetries) {
+          console.log("Retrying with visual verification error context...");
+          continue;
+        }
+        console.warn("Visual verification failed but proceeding (max retries reached)");
+      }
 
       await gitPublish(today, result.metadata.title);
       return;

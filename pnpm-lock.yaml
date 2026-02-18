@@ -6,7 +6,11 @@ settings:
 
 importers:
 
-  .: {}
+  .:
+    dependencies:
+      playwright:
+        specifier: ^1.58.2
+        version: 1.58.2
 
   packages/asset-catalog:
     dependencies:

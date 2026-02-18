@@ -1,15 +1,19 @@
 import type { CatalogAsset } from "../assets/query.js";
 
-export function buildSystemPrompt(availableAssets?: CatalogAsset[]): string {
+export function buildSystemPrompt(availableAssets?: CatalogAsset[], gameDate?: string): string {
+  const date = gameDate || new Date().toISOString().split("T")[0];
   const assetSection = availableAssets && availableAssets.length > 0
-    ? `\n## Available Game Assets
+    ? `\n## Available Game Assets — YOU MUST USE THEM
+
+**RULE 0: SPRITES ARE MANDATORY.** You MUST use at least 2 of the assets listed below with \`this.load.image()\` in preload(). Using ONLY colored rectangles when these assets are available is a HARD FAILURE and will cause the game to be rejected and regenerated. Colored rectangles may only be used for simple UI elements, backgrounds, or shapes where no matching asset exists.
 
 The following CC0-licensed sprite assets are pre-downloaded and available in the game's assets directory.
-Use \`this.load.image('key', '/games/DATE/assets/filename.png')\` in preload, then \`this.add.sprite(x, y, 'key')\` in create.
-The DATE will be filled in automatically — just use the key and filename as shown.
+Use \`this.load.image('key', '/games/${date}/assets/filename.png')\` in preload(), then \`this.add.sprite(x, y, 'key')\` in create().
+
+**CRITICAL: Asset paths MUST start with \`/games/${date}/assets/\`** — this is the exact path where assets are served. Do NOT use relative paths like \`assets/\` or \`./\`.
 
 ${availableAssets.map((a) => {
-    let desc = `- **${a.key}** (${a.file}): ${a.width}x${a.height}px — tags: ${a.tags.join(", ")}`;
+    let desc = `- **${a.key}** → \`this.load.image('${a.key}', '/games/${date}/assets/${a.file}')\` — ${a.width}x${a.height}px — tags: ${a.tags.join(", ")}`;
     if (a.isSpritesheet) {
       desc += ` [SPRITESHEET: ${a.frameCount} frames, ${a.frameWidth}x${a.frameHeight}px each]`;
     }
@@ -23,7 +27,7 @@ ${availableAssets.map((a) => {
 For assets marked as [SPRITESHEET], load them with frame dimensions:
 \`\`\`typescript
 // In preload:
-this.load.spritesheet('key', '/games/DATE/assets/filename.png', { frameWidth: FW, frameHeight: FH });
+this.load.spritesheet('key', '/games/${date}/assets/filename.png', { frameWidth: FW, frameHeight: FH });
 // In create:
 this.anims.create({ key: 'anim-name', frames: this.anims.generateFrameNumbers('key', { start: 0, end: FRAME_COUNT - 1 }), frameRate: 10, repeat: -1 });
 this.add.sprite(x, y, 'key').play('anim-name');
@@ -38,9 +42,9 @@ Use the frameWidth, frameHeight, and frameCount values shown for each spriteshee
   "music": []
 }
 \`\`\`
-Where SOURCE_URL is the original source URL for each asset (provided below). The generator will download them automatically.
+Where SOURCE_URL is the original source URL for each asset (provided above next to "source:"). The generator will copy them from the local catalog automatically.
 
-Prefer using these real sprites over colored rectangles when they match the game theme. You can still use rectangles for simple shapes or when no matching asset exists.\n`
+**REMINDER: You MUST use at least 2 sprite assets from this list in your preload() with this.load.image(). This is not optional.**\n`
     : "";
 
   return SYSTEM_PROMPT_BASE + assetSection;
@@ -181,9 +185,9 @@ const input = this.inputManager.getState();
 ### Touch / Mobile Support
 
 The web client detects mobile automatically and renders a virtual joystick + 2 buttons.
-Touch state is merged into `window.touchInput` and also passed to `launch()` as options.
+Touch state is merged into \`window.touchInput\` and also passed to \`launch()\` as options.
 
-In your `launch()` function and `onUpdate()`, merge touch input with keyboard/gamepad:
+In your \`launch()\` function and \`onUpdate()\`, merge touch input with keyboard/gamepad:
 
 \`\`\`typescript
 export function launch(containerId: string, options?: { isMobile?: boolean; touchInput?: { x: number; y: number; buttons: Record<string, boolean> } }): { destroy: () => void } {
@@ -419,7 +423,7 @@ Use empty arrays unless you have specific catalog assets. Use colored rectangles
 6. Use ctx.state.setCustom/getCustom for all game state on server. Do NOT assume x, y, or score exist on player schema directly.
 7. Use onInit to set up initial game state
 8. The client file MUST export a \`launch(containerId)\` function AND default export the scene class
-9. Use colored rectangles for all visuals (no external assets needed)
+9. Use sprites from the asset catalog when available (loaded via this.load.image in preload). Use colored rectangles only for simple UI elements or when no matching asset exists.
 10. Every asset key referenced in code MUST be present in the assets.json manifest
 11. NEVER use \`this.room\` — BaseScene has NO room property. Use \`this.mpClient\` (a \`MultiplayerClient | null\` you declare on the scene) to send input/actions. Call \`this.mpClient?.sendInput(input)\` in onUpdate.
 12. Do NOT use defineQuery — it does not exist in bitECS 0.4, use query() directly

@@ -44,7 +44,7 @@ export async function generateGame(
   }
   console.log(`Found ${relevantAssets.length} relevant assets: ${relevantAssets.map((a: CatalogAsset) => a.key).join(", ")}`);
 
-  const systemPrompt = buildSystemPrompt(relevantAssets);
+  const systemPrompt = buildSystemPrompt(relevantAssets, today);
 
   const client = new Anthropic();
 

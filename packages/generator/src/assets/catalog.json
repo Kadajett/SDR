@@ -228,1529 +228,1194 @@
       "category": "sprite"
     },
     {
-      "key": "character-unknown",
-      "file": "character-unknown.png",
-      "source": "https://opengameart.org/sites/default/files/Amulet071007.png",
-      "width": 443,
-      "height": 1000,
-      "orientation": "portrait",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "humanoid"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/lots-of-free-2d-tiles-and-sprites-by-hyptosis"
-    },
-    {
-      "key": "character-unknown-1",
-      "file": "character-unknown-1.png",
-      "source": "https://opengameart.org/sites/default/files/hyptosis_sprites-and-tiles-for-you_0.png",
-      "width": 960,
-      "height": 960,
-      "orientation": "square",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "humanoid"
-      ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/lots-of-free-2d-tiles-and-sprites-by-hyptosis",
-      "isSpritesheet": true,
-      "frameWidth": 32,
-      "frameHeight": 32,
-      "frameCount": 900
-    },
-    {
-      "key": "character-unknown-2",
-      "file": "character-unknown-2.png",
-      "source": "https://opengameart.org/sites/default/files/hyptosis_tile-art-batch-1_0.png",
-      "width": 960,
-      "height": 960,
-      "orientation": "square",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "humanoid"
-      ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/lots-of-free-2d-tiles-and-sprites-by-hyptosis",
-      "isSpritesheet": true,
-      "frameWidth": 32,
-      "frameHeight": 32,
-      "frameCount": 900
-    },
-    {
-      "key": "character-unknown-3",
-      "file": "character-unknown-3.png",
-      "source": "https://opengameart.org/sites/default/files/951a7f47f87b1dbe262b27fba196f3bf.png",
-      "width": 392,
-      "height": 236,
-      "orientation": "landscape",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "humanoid"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/zelda-like-tilesets-and-sprites"
-    },
-    {
-      "key": "character-unknown-4",
-      "file": "character-unknown-4.png",
-      "source": "https://opengameart.org/sites/default/files/big%20ol%20ssss.png",
-      "width": 245,
-      "height": 158,
-      "orientation": "landscape",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "humanoid"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/zelda-like-tilesets-and-sprites"
-    },
-    {
-      "key": "character-unknown-5",
-      "file": "character-unknown-5.png",
-      "source": "https://opengameart.org/sites/default/files/big%20ol%20ssss_0.png",
-      "width": 791,
-      "height": 575,
-      "orientation": "landscape",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "humanoid"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/zelda-like-tilesets-and-sprites"
-    },
-    {
-      "key": "character-unknown-6",
-      "file": "character-unknown-6.png",
-      "source": "https://opengameart.org/sites/default/files/tiles_tiny_sample_2.png",
-      "width": 320,
-      "height": 320,
-      "orientation": "square",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "humanoid"
-      ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
-      "isSpritesheet": true,
-      "frameWidth": 32,
-      "frameHeight": 32,
-      "frameCount": 100
-    },
-    {
-      "key": "character-unknown-7",
-      "file": "character-unknown-7.png",
-      "source": "https://opengameart.org/sites/default/files/tiles_screenshot_0.8_Zot_defence.png",
-      "width": 697,
-      "height": 506,
-      "orientation": "landscape",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "humanoid"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/dungeon-crawl-32x32-tiles"
-    },
-    {
-      "key": "character-unknown-8",
-      "file": "character-unknown-8.png",
-      "source": "https://opengameart.org/sites/default/files/tiles_screenshot_0.6_shoals_kraken_0.png",
-      "width": 799,
-      "height": 542,
-      "orientation": "landscape",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "humanoid"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/dungeon-crawl-32x32-tiles"
-    },
-    {
-      "key": "character-unknown-9",
-      "file": "character-unknown-9.png",
-      "source": "https://opengameart.org/sites/default/files/dungeon_pre_small.png",
-      "width": 100,
-      "height": 100,
-      "orientation": "square",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "humanoid"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/a-blocky-dungeon"
-    },
-    {
-      "key": "character-unknown-10",
-      "file": "character-unknown-10.png",
-      "source": "https://opengameart.org/sites/default/files/dungeon_sheet.png",
+      "key": "unknown-1-10",
+      "file": "unknown-1-10.png",
+      "source": "",
       "width": 384,
       "height": 160,
-      "orientation": "landscape",
       "license": "CC0",
       "tags": [
         "character",
-        "unknown",
-        "humanoid"
+        "sprite",
+        "game"
       ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/a-blocky-dungeon",
-      "isSpritesheet": true,
-      "frameWidth": 16,
-      "frameHeight": 160,
-      "frameCount": 24
+      "category": "sprite"
     },
     {
-      "key": "character-unknown-11",
-      "file": "character-unknown-11.png",
-      "source": "https://opengameart.org/sites/default/files/dungeon_sheet_0.png",
-      "width": 384,
-      "height": 160,
-      "orientation": "landscape",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "humanoid"
-      ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/a-blocky-dungeon",
-      "isSpritesheet": true,
-      "frameWidth": 16,
-      "frameHeight": 160,
-      "frameCount": 24
-    },
-    {
-      "key": "character-unknown-12",
-      "file": "character-unknown-12.png",
-      "source": "https://opengameart.org/sites/default/files/Amulet071007.png",
-      "width": 443,
-      "height": 1000,
-      "orientation": "portrait",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "platformer"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/lots-of-free-2d-tiles-and-sprites-by-hyptosis"
-    },
-    {
-      "key": "character-unknown-13",
-      "file": "character-unknown-13.png",
-      "source": "https://opengameart.org/sites/default/files/hyptosis_sprites-and-tiles-for-you_0.png",
+      "key": "unknown-1-13",
+      "file": "unknown-1-13.png",
+      "source": "",
       "width": 960,
       "height": 960,
-      "orientation": "square",
       "license": "CC0",
       "tags": [
         "character",
-        "unknown",
-        "platformer"
+        "sprite",
+        "game"
       ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/lots-of-free-2d-tiles-and-sprites-by-hyptosis",
-      "isSpritesheet": true,
-      "frameWidth": 32,
-      "frameHeight": 32,
-      "frameCount": 900
+      "category": "sprite"
     },
     {
-      "key": "character-unknown-14",
-      "file": "character-unknown-14.png",
-      "source": "https://opengameart.org/sites/default/files/hyptosis_tile-art-batch-1_0.png",
-      "width": 960,
-      "height": 960,
-      "orientation": "square",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "platformer"
-      ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/lots-of-free-2d-tiles-and-sprites-by-hyptosis",
-      "isSpritesheet": true,
-      "frameWidth": 32,
-      "frameHeight": 32,
-      "frameCount": 900
-    },
-    {
-      "key": "character-unknown-15",
-      "file": "character-unknown-15.png",
-      "source": "https://opengameart.org/sites/default/files/pre-small.png",
-      "width": 100,
-      "height": 100,
-      "orientation": "square",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "platformer"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/a-platformer-in-the-forest"
-    },
-    {
-      "key": "character-unknown-16",
-      "file": "character-unknown-16.png",
-      "source": "https://opengameart.org/sites/default/files/mockup_3.png",
+      "key": "unknown-1-16",
+      "file": "unknown-1-16.png",
+      "source": "",
       "width": 288,
       "height": 172,
-      "orientation": "landscape",
       "license": "CC0",
       "tags": [
         "character",
-        "unknown",
-        "platformer"
+        "sprite",
+        "game"
       ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/a-platformer-in-the-forest"
+      "category": "sprite"
     },
     {
-      "key": "character-unknown-17",
-      "file": "character-unknown-17.png",
-      "source": "https://opengameart.org/sites/default/files/swoosh.png",
-      "width": 128,
-      "height": 32,
-      "orientation": "landscape",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "platformer"
-      ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/a-platformer-in-the-forest",
-      "isSpritesheet": true,
-      "frameWidth": 32,
-      "frameHeight": 32,
-      "frameCount": 4
-    },
-    {
-      "key": "character-unknown-18",
-      "file": "character-unknown-18.png",
-      "source": "https://opengameart.org/sites/default/files/dungeon_pre_small.png",
-      "width": 100,
-      "height": 100,
-      "orientation": "square",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "platformer"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/a-blocky-dungeon"
-    },
-    {
-      "key": "character-unknown-19",
-      "file": "character-unknown-19.png",
-      "source": "https://opengameart.org/sites/default/files/dungeon_sheet.png",
+      "key": "unknown-1-19",
+      "file": "unknown-1-19.png",
+      "source": "",
       "width": 384,
       "height": 160,
-      "orientation": "landscape",
       "license": "CC0",
       "tags": [
         "character",
-        "unknown",
-        "platformer"
+        "sprite",
+        "game"
       ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/a-blocky-dungeon",
-      "isSpritesheet": true,
-      "frameWidth": 16,
-      "frameHeight": 160,
-      "frameCount": 24
+      "category": "sprite"
     },
     {
-      "key": "character-unknown-20",
-      "file": "character-unknown-20.png",
-      "source": "https://opengameart.org/sites/default/files/dungeon_sheet_0.png",
-      "width": 384,
-      "height": 160,
-      "orientation": "landscape",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "platformer"
-      ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/a-blocky-dungeon",
-      "isSpritesheet": true,
-      "frameWidth": 16,
-      "frameHeight": 160,
-      "frameCount": 24
-    },
-    {
-      "key": "character-unknown-21",
-      "file": "character-unknown-21.png",
-      "source": "https://opengameart.org/sites/default/files/basic.png",
+      "key": "unknown-1-22",
+      "file": "unknown-1-22.png",
+      "source": "",
       "width": 384,
       "height": 224,
-      "orientation": "landscape",
       "license": "CC0",
       "tags": [
         "character",
-        "unknown",
-        "platformer"
+        "sprite",
+        "game"
       ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/tiny-16-basic"
+      "category": "sprite"
     },
     {
-      "key": "character-unknown-22",
-      "file": "character-unknown-22.png",
-      "source": "https://opengameart.org/sites/default/files/dungeon.png",
-      "width": 384,
-      "height": 224,
-      "orientation": "landscape",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "platformer"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/tiny-16-basic"
-    },
-    {
-      "key": "character-unknown-23",
-      "file": "character-unknown-23.png",
-      "source": "https://opengameart.org/sites/default/files/overworld.png",
-      "width": 384,
-      "height": 224,
-      "orientation": "landscape",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "platformer"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/tiny-16-basic"
-    },
-    {
-      "key": "character-unknown-24",
-      "file": "character-unknown-24.png",
-      "source": "https://opengameart.org/sites/default/files/Amulet071007.png",
-      "width": 443,
-      "height": 1000,
-      "orientation": "portrait",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "enemy",
-        "monster"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/lots-of-free-2d-tiles-and-sprites-by-hyptosis"
-    },
-    {
-      "key": "character-unknown-25",
-      "file": "character-unknown-25.png",
-      "source": "https://opengameart.org/sites/default/files/hyptosis_sprites-and-tiles-for-you_0.png",
+      "key": "unknown-1-25",
+      "file": "unknown-1-25.png",
+      "source": "",
       "width": 960,
       "height": 960,
-      "orientation": "square",
       "license": "CC0",
       "tags": [
         "character",
-        "unknown",
-        "enemy",
-        "monster"
+        "sprite",
+        "game"
       ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/lots-of-free-2d-tiles-and-sprites-by-hyptosis",
-      "isSpritesheet": true,
-      "frameWidth": 32,
-      "frameHeight": 32,
-      "frameCount": 900
+      "category": "sprite"
     },
     {
-      "key": "character-unknown-26",
-      "file": "character-unknown-26.png",
-      "source": "https://opengameart.org/sites/default/files/hyptosis_tile-art-batch-1_0.png",
-      "width": 960,
-      "height": 960,
-      "orientation": "square",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "enemy",
-        "monster"
-      ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/lots-of-free-2d-tiles-and-sprites-by-hyptosis",
-      "isSpritesheet": true,
-      "frameWidth": 32,
-      "frameHeight": 32,
-      "frameCount": 900
-    },
-    {
-      "key": "character-unknown-27",
-      "file": "character-unknown-27.png",
-      "source": "https://opengameart.org/sites/default/files/tiles_tiny_sample_2.png",
-      "width": 320,
-      "height": 320,
-      "orientation": "square",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "enemy",
-        "monster"
-      ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
-      "isSpritesheet": true,
-      "frameWidth": 32,
-      "frameHeight": 32,
-      "frameCount": 100
-    },
-    {
-      "key": "character-unknown-28",
-      "file": "character-unknown-28.png",
-      "source": "https://opengameart.org/sites/default/files/tiles_screenshot_0.8_Zot_defence.png",
+      "key": "unknown-1-28",
+      "file": "unknown-1-28.png",
+      "source": "",
       "width": 697,
       "height": 506,
-      "orientation": "landscape",
       "license": "CC0",
       "tags": [
         "character",
-        "unknown",
-        "enemy",
-        "monster"
+        "sprite",
+        "game"
       ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/dungeon-crawl-32x32-tiles"
+      "category": "sprite"
     },
     {
-      "key": "character-unknown-29",
-      "file": "character-unknown-29.png",
-      "source": "https://opengameart.org/sites/default/files/tiles_screenshot_0.6_shoals_kraken_0.png",
-      "width": 799,
-      "height": 542,
-      "orientation": "landscape",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "enemy",
-        "monster"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/dungeon-crawl-32x32-tiles"
-    },
-    {
-      "key": "character-unknown-30",
-      "file": "character-unknown-30.png",
-      "source": "https://opengameart.org/sites/default/files/basic.png",
+      "key": "unknown-1-31",
+      "file": "unknown-1-31.png",
+      "source": "",
       "width": 384,
       "height": 224,
-      "orientation": "landscape",
       "license": "CC0",
       "tags": [
         "character",
-        "unknown",
-        "enemy",
-        "monster"
+        "sprite",
+        "game"
       ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/tiny-16-basic"
+      "category": "sprite"
     },
     {
-      "key": "character-unknown-31",
-      "file": "character-unknown-31.png",
-      "source": "https://opengameart.org/sites/default/files/dungeon.png",
-      "width": 384,
-      "height": 224,
-      "orientation": "landscape",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "enemy",
-        "monster"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/tiny-16-basic"
-    },
-    {
-      "key": "character-unknown-32",
-      "file": "character-unknown-32.png",
-      "source": "https://opengameart.org/sites/default/files/overworld.png",
-      "width": 384,
-      "height": 224,
-      "orientation": "landscape",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "enemy",
-        "monster"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/tiny-16-basic"
-    },
-    {
-      "key": "character-unknown-33",
-      "file": "character-unknown-33.png",
-      "source": "https://opengameart.org/sites/default/files/Tree0.png",
+      "key": "unknown-1-34",
+      "file": "unknown-1-34.png",
+      "source": "",
       "width": 192,
       "height": 576,
-      "orientation": "portrait",
-      "license": "CC-BY",
-      "tags": [
-        "character",
-        "unknown",
-        "enemy",
-        "monster"
-      ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/dawnlike-16x16-universal-rogue-like-tileset-v181",
-      "isSpritesheet": true,
-      "frameWidth": 192,
-      "frameHeight": 192,
-      "frameCount": 3
-    },
-    {
-      "key": "character-unknown-34",
-      "file": "character-unknown-34.png",
-      "source": "https://opengameart.org/sites/default/files/Tree1.png",
-      "width": 192,
-      "height": 576,
-      "orientation": "portrait",
-      "license": "CC-BY",
-      "tags": [
-        "character",
-        "unknown",
-        "enemy",
-        "monster"
-      ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/dawnlike-16x16-universal-rogue-like-tileset-v181",
-      "isSpritesheet": true,
-      "frameWidth": 192,
-      "frameHeight": 192,
-      "frameCount": 3
-    },
-    {
-      "key": "character-unknown-35",
-      "file": "character-unknown-35.png",
-      "source": "https://opengameart.org/sites/default/files/forest_1.png",
-      "width": 512,
-      "height": 512,
-      "orientation": "square",
-      "license": "CC-BY",
-      "tags": [
-        "character",
-        "unknown",
-        "enemy",
-        "monster"
-      ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/dawnlike-16x16-universal-rogue-like-tileset-v181",
-      "isSpritesheet": true,
-      "frameWidth": 32,
-      "frameHeight": 32,
-      "frameCount": 256
-    },
-    {
-      "key": "unknown-enemy",
-      "file": "unknown-enemy.png",
-      "source": "https://opengameart.org/sites/default/files/951a7f47f87b1dbe262b27fba196f3bf.png",
-      "width": 392,
-      "height": 236,
-      "orientation": "landscape",
       "license": "CC0",
       "tags": [
-        "unknown",
-        "enemy",
-        "dragon",
-        "fantasy"
+        "character",
+        "sprite",
+        "game"
       ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/zelda-like-tilesets-and-sprites"
+      "category": "sprite"
     },
     {
-      "key": "unknown-enemy-1",
-      "file": "unknown-enemy-1.png",
-      "source": "https://opengameart.org/sites/default/files/big%20ol%20ssss.png",
+      "key": "unknown-1-37",
+      "file": "unknown-1-37.png",
+      "source": "",
       "width": 245,
       "height": 158,
-      "orientation": "landscape",
       "license": "CC0",
       "tags": [
-        "unknown",
-        "enemy",
-        "dragon",
-        "fantasy"
+        "character",
+        "sprite",
+        "game"
       ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/zelda-like-tilesets-and-sprites"
+      "category": "sprite"
     },
     {
-      "key": "unknown-enemy-2",
-      "file": "unknown-enemy-2.png",
-      "source": "https://opengameart.org/sites/default/files/big%20ol%20ssss_0.png",
-      "width": 791,
-      "height": 575,
-      "orientation": "landscape",
+      "key": "unknown-1-4",
+      "file": "unknown-1-4.png",
+      "source": "",
+      "width": 245,
+      "height": 158,
       "license": "CC0",
       "tags": [
-        "unknown",
-        "enemy",
-        "dragon",
-        "fantasy"
+        "character",
+        "sprite",
+        "game"
       ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/zelda-like-tilesets-and-sprites"
+      "category": "sprite"
     },
     {
-      "key": "unknown-enemy-3",
-      "file": "unknown-enemy-3.png",
-      "source": "https://opengameart.org/sites/default/files/basic.png",
+      "key": "unknown-1-40",
+      "file": "unknown-1-40.png",
+      "source": "",
       "width": 384,
       "height": 224,
-      "orientation": "landscape",
       "license": "CC0",
       "tags": [
-        "unknown",
-        "enemy",
-        "dragon",
-        "fantasy"
+        "character",
+        "sprite",
+        "game"
       ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/tiny-16-basic"
+      "category": "sprite"
     },
     {
-      "key": "unknown-enemy-4",
-      "file": "unknown-enemy-4.png",
-      "source": "https://opengameart.org/sites/default/files/dungeon.png",
-      "width": 384,
-      "height": 224,
-      "orientation": "landscape",
-      "license": "CC0",
-      "tags": [
-        "unknown",
-        "enemy",
-        "dragon",
-        "fantasy"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/tiny-16-basic"
-    },
-    {
-      "key": "unknown-enemy-5",
-      "file": "unknown-enemy-5.png",
-      "source": "https://opengameart.org/sites/default/files/overworld.png",
-      "width": 384,
-      "height": 224,
-      "orientation": "landscape",
-      "license": "CC0",
-      "tags": [
-        "unknown",
-        "enemy",
-        "dragon",
-        "fantasy"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/tiny-16-basic"
-    },
-    {
-      "key": "unknown-enemy-6",
-      "file": "unknown-enemy-6.png",
-      "source": "https://opengameart.org/sites/default/files/Tree0.png",
+      "key": "unknown-1-43",
+      "file": "unknown-1-43.png",
+      "source": "",
       "width": 192,
       "height": 576,
-      "orientation": "portrait",
-      "license": "CC-BY",
-      "tags": [
-        "unknown",
-        "enemy",
-        "dragon",
-        "fantasy"
-      ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/dawnlike-16x16-universal-rogue-like-tileset-v181",
-      "isSpritesheet": true,
-      "frameWidth": 192,
-      "frameHeight": 192,
-      "frameCount": 3
-    },
-    {
-      "key": "unknown-enemy-7",
-      "file": "unknown-enemy-7.png",
-      "source": "https://opengameart.org/sites/default/files/Tree1.png",
-      "width": 192,
-      "height": 576,
-      "orientation": "portrait",
-      "license": "CC-BY",
-      "tags": [
-        "unknown",
-        "enemy",
-        "dragon",
-        "fantasy"
-      ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/dawnlike-16x16-universal-rogue-like-tileset-v181",
-      "isSpritesheet": true,
-      "frameWidth": 192,
-      "frameHeight": 192,
-      "frameCount": 3
-    },
-    {
-      "key": "unknown-enemy-8",
-      "file": "unknown-enemy-8.png",
-      "source": "https://opengameart.org/sites/default/files/forest_1.png",
-      "width": 512,
-      "height": 512,
-      "orientation": "square",
-      "license": "CC-BY",
-      "tags": [
-        "unknown",
-        "enemy",
-        "dragon",
-        "fantasy"
-      ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/dawnlike-16x16-universal-rogue-like-tileset-v181",
-      "isSpritesheet": true,
-      "frameWidth": 32,
-      "frameHeight": 32,
-      "frameCount": 256
-    },
-    {
-      "key": "unknown-enemy-9",
-      "file": "unknown-enemy-9.png",
-      "source": "https://opengameart.org/sites/default/files/dragonsprev.png",
-      "width": 100,
-      "height": 100,
-      "orientation": "square",
       "license": "CC0",
       "tags": [
-        "unknown",
-        "enemy",
-        "dragon",
-        "fantasy"
+        "character",
+        "sprite",
+        "game"
       ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/rpg-enemies-11-dragons"
+      "category": "sprite"
     },
     {
-      "key": "unknown-enemy-10",
-      "file": "unknown-enemy-10.png",
-      "source": "https://opengameart.org/sites/default/files/DAGRONS5.png",
+      "key": "unknown-1-46",
+      "file": "unknown-1-46.png",
+      "source": "",
       "width": 428,
       "height": 377,
-      "orientation": "square",
-      "license": "CC0",
-      "tags": [
-        "unknown",
-        "enemy",
-        "dragon",
-        "fantasy"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/rpg-enemies-11-dragons"
-    },
-    {
-      "key": "unknown-enemy-11",
-      "file": "unknown-enemy-11.png",
-      "source": "https://opengameart.org/sites/default/files/DAGRONS5Credit.png",
-      "width": 350,
-      "height": 620,
-      "orientation": "portrait",
-      "license": "CC0",
-      "tags": [
-        "unknown",
-        "enemy",
-        "dragon",
-        "fantasy"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/rpg-enemies-11-dragons"
-    },
-    {
-      "key": "character-unknown-36",
-      "file": "character-unknown-36.png",
-      "source": "https://opengameart.org/sites/default/files/tiles_tiny_sample_2.png",
-      "width": 320,
-      "height": 320,
-      "orientation": "square",
       "license": "CC0",
       "tags": [
         "character",
-        "unknown",
-        "medieval",
-        "knight"
+        "sprite",
+        "game"
       ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
-      "isSpritesheet": true,
-      "frameWidth": 32,
-      "frameHeight": 32,
-      "frameCount": 100
+      "category": "sprite"
     },
     {
-      "key": "character-unknown-37",
-      "file": "character-unknown-37.png",
-      "source": "https://opengameart.org/sites/default/files/tiles_screenshot_0.8_Zot_defence.png",
+      "key": "unknown-1-49",
+      "file": "unknown-1-49.png",
+      "source": "",
       "width": 697,
       "height": 506,
-      "orientation": "landscape",
       "license": "CC0",
       "tags": [
         "character",
-        "unknown",
-        "medieval",
-        "knight"
+        "sprite",
+        "game"
       ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/dungeon-crawl-32x32-tiles"
+      "category": "sprite"
     },
     {
-      "key": "character-unknown-38",
-      "file": "character-unknown-38.png",
-      "source": "https://opengameart.org/sites/default/files/tiles_screenshot_0.6_shoals_kraken_0.png",
-      "width": 799,
-      "height": 542,
-      "orientation": "landscape",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "medieval",
-        "knight"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/dungeon-crawl-32x32-tiles"
-    },
-    {
-      "key": "character-unknown-39",
-      "file": "character-unknown-39.png",
-      "source": "https://opengameart.org/sites/default/files/dungeon_pre_small.png",
-      "width": 100,
-      "height": 100,
-      "orientation": "square",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "medieval",
-        "knight"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/a-blocky-dungeon"
-    },
-    {
-      "key": "character-unknown-40",
-      "file": "character-unknown-40.png",
-      "source": "https://opengameart.org/sites/default/files/dungeon_sheet.png",
+      "key": "unknown-1-52",
+      "file": "unknown-1-52.png",
+      "source": "",
       "width": 384,
       "height": 160,
-      "orientation": "landscape",
       "license": "CC0",
       "tags": [
         "character",
-        "unknown",
-        "medieval",
-        "knight"
+        "sprite",
+        "game"
       ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/a-blocky-dungeon",
-      "isSpritesheet": true,
-      "frameWidth": 16,
-      "frameHeight": 160,
-      "frameCount": 24
+      "category": "sprite"
     },
     {
-      "key": "character-unknown-41",
-      "file": "character-unknown-41.png",
-      "source": "https://opengameart.org/sites/default/files/dungeon_sheet_0.png",
-      "width": 384,
-      "height": 160,
-      "orientation": "landscape",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "medieval",
-        "knight"
-      ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/a-blocky-dungeon",
-      "isSpritesheet": true,
-      "frameWidth": 16,
-      "frameHeight": 160,
-      "frameCount": 24
-    },
-    {
-      "key": "character-unknown-42",
-      "file": "character-unknown-42.png",
-      "source": "https://opengameart.org/sites/default/files/working-title1.png",
-      "width": 800,
-      "height": 475,
-      "orientation": "landscape",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "medieval",
-        "knight"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/castle-platformer"
-    },
-    {
-      "key": "character-unknown-43",
-      "file": "character-unknown-43.png",
-      "source": "https://opengameart.org/sites/default/files/working-title2.png",
+      "key": "unknown-1-55",
+      "file": "unknown-1-55.png",
+      "source": "",
       "width": 800,
       "height": 477,
-      "orientation": "landscape",
       "license": "CC0",
       "tags": [
         "character",
-        "unknown",
-        "medieval",
-        "knight"
+        "sprite",
+        "game"
       ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/castle-platformer"
+      "category": "sprite"
     },
     {
-      "key": "character-unknown-44",
-      "file": "character-unknown-44.png",
-      "source": "https://opengameart.org/sites/default/files/Preview_61.png",
-      "width": 112,
-      "height": 112,
-      "orientation": "square",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "medieval",
-        "knight"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/classic-hero"
-    },
-    {
-      "key": "character-unknown-45",
-      "file": "character-unknown-45.png",
-      "source": "https://opengameart.org/sites/default/files/Old%20hero.png",
+      "key": "unknown-1-57",
+      "file": "unknown-1-57.png",
+      "source": "",
       "width": 128,
       "height": 112,
-      "orientation": "square",
       "license": "CC0",
       "tags": [
         "character",
-        "unknown",
-        "medieval",
-        "knight"
+        "sprite",
+        "game"
       ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/classic-hero"
+      "category": "sprite"
     },
     {
-      "key": "character-unknown-46",
-      "file": "character-unknown-46.png",
-      "source": "https://opengameart.org/sites/default/files/First%20ever%20mockup%20%28Sep%2014%202012%29.png",
-      "width": 128,
-      "height": 128,
-      "orientation": "square",
+      "key": "unknown-1-60",
+      "file": "unknown-1-60.png",
+      "source": "",
+      "width": 313,
+      "height": 207,
       "license": "CC0",
       "tags": [
         "character",
-        "unknown",
-        "medieval",
-        "knight"
+        "sprite",
+        "game"
       ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/classic-hero"
+      "category": "sprite"
     },
     {
-      "key": "unknown-undead",
-      "file": "unknown-undead.png",
-      "source": "https://opengameart.org/sites/default/files/survivor-idle_shotgun_0.png",
-      "width": 313,
-      "height": 207,
-      "orientation": "landscape",
-      "license": "CC-BY",
-      "tags": [
-        "unknown",
-        "undead",
-        "enemy",
-        "zombie"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/animated-top-down-survivor-player"
-    },
-    {
-      "key": "unknown-undead-1",
-      "file": "unknown-undead-1.png",
-      "source": "https://opengameart.org/sites/default/files/survivor-idle_rifle_0.png",
-      "width": 313,
-      "height": 207,
-      "orientation": "landscape",
-      "license": "CC-BY",
-      "tags": [
-        "unknown",
-        "undead",
-        "enemy",
-        "zombie"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/animated-top-down-survivor-player"
-    },
-    {
-      "key": "unknown-undead-2",
-      "file": "unknown-undead-2.png",
-      "source": "https://opengameart.org/sites/default/files/survivor-idle_knife_0.png",
-      "width": 289,
-      "height": 224,
-      "orientation": "landscape",
-      "license": "CC-BY",
-      "tags": [
-        "unknown",
-        "undead",
-        "enemy",
-        "zombie"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/animated-top-down-survivor-player"
-    },
-    {
-      "key": "unknown-undead-3",
-      "file": "unknown-undead-3.png",
-      "source": "https://opengameart.org/sites/default/files/Screen%20Shot%202014-11-11%20at%2022.32.56.png",
-      "width": 681,
-      "height": 866,
-      "orientation": "portrait",
-      "license": "CC-BY",
-      "tags": [
-        "unknown",
-        "undead",
-        "enemy",
-        "zombie"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/top-down-sci-fi-shooter-characters-20"
-    },
-    {
-      "key": "unknown-undead-4",
-      "file": "unknown-undead-4.png",
-      "source": "https://opengameart.org/sites/default/files/Screen%20Shot%202014-11-11%20at%2020.50.17.png",
+      "key": "unknown-1-63",
+      "file": "unknown-1-63.png",
+      "source": "",
       "width": 768,
       "height": 1047,
-      "orientation": "portrait",
-      "license": "CC-BY",
+      "license": "CC0",
       "tags": [
-        "unknown",
-        "undead",
-        "enemy",
-        "zombie"
+        "character",
+        "sprite",
+        "game"
       ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/top-down-sci-fi-shooter-characters-20"
+      "category": "sprite"
     },
     {
-      "key": "unknown-undead-5",
-      "file": "unknown-undead-5.png",
-      "source": "https://opengameart.org/sites/default/files/Screen%20Shot%202014-11-13%20at%2009.42.09_1.png",
-      "width": 645,
-      "height": 870,
-      "orientation": "portrait",
-      "license": "CC-BY",
-      "tags": [
-        "unknown",
-        "undead",
-        "enemy",
-        "zombie"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/top-down-sci-fi-shooter-characters-20"
-    },
-    {
-      "key": "unknown-undead-6",
-      "file": "unknown-undead-6.png",
-      "source": "https://opengameart.org/sites/default/files/zombies_and_skeletons_0.png",
+      "key": "unknown-1-66",
+      "file": "unknown-1-66.png",
+      "source": "",
       "width": 150,
       "height": 75,
-      "orientation": "landscape",
       "license": "CC0",
       "tags": [
-        "unknown",
-        "undead",
-        "enemy",
-        "zombie"
+        "character",
+        "sprite",
+        "game"
       ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/zombies-skeletons"
+      "category": "sprite"
     },
     {
-      "key": "unknown-undead-7",
-      "file": "unknown-undead-7.png",
-      "source": "https://opengameart.org/sites/default/files/zombies_and_skeletons.png",
-      "width": 150,
-      "height": 75,
-      "orientation": "landscape",
-      "license": "CC0",
-      "tags": [
-        "unknown",
-        "undead",
-        "enemy",
-        "zombie"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/zombies-skeletons"
-    },
-    {
-      "key": "unknown-undead-8",
-      "file": "unknown-undead-8.png",
-      "source": "https://opengameart.org/sites/default/files/preview_674.png",
-      "width": 60,
-      "height": 60,
-      "orientation": "square",
-      "license": "CC0",
-      "tags": [
-        "unknown",
-        "undead",
-        "enemy",
-        "zombie"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/zombies-skeletons"
-    },
-    {
-      "key": "unknown-undead-9",
-      "file": "unknown-undead-9.png",
-      "source": "https://opengameart.org/sites/default/files/zombie_0.png",
+      "key": "unknown-1-69",
+      "file": "unknown-1-69.png",
+      "source": "",
       "width": 4608,
       "height": 1024,
-      "orientation": "landscape",
-      "license": "CC-BY",
-      "tags": [
-        "unknown",
-        "undead",
-        "enemy",
-        "zombie"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/zombie-sprites"
-    },
-    {
-      "key": "unknown-undead-10",
-      "file": "unknown-undead-10.png",
-      "source": "https://opengameart.org/sites/default/files/zombie_topdown.png",
-      "width": 4608,
-      "height": 1024,
-      "orientation": "landscape",
-      "license": "CC-BY",
-      "tags": [
-        "unknown",
-        "undead",
-        "enemy",
-        "zombie"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/zombie-sprites"
-    },
-    {
-      "key": "unknown-undead-11",
-      "file": "unknown-undead-11.png",
-      "source": "https://opengameart.org/sites/default/files/zombie_0.gif",
-      "width": 128,
-      "height": 128,
-      "orientation": "square",
-      "license": "CC-BY",
-      "tags": [
-        "unknown",
-        "undead",
-        "enemy",
-        "zombie"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/zombie-sprites"
-    },
-    {
-      "key": "character-unknown-47",
-      "file": "character-unknown-47.png",
-      "source": "https://opengameart.org/sites/default/files/cyberwars%20preview.png",
-      "width": 99,
-      "height": 99,
-      "orientation": "square",
-      "license": "CC-BY",
+      "license": "CC0",
       "tags": [
         "character",
-        "unknown",
-        "robot",
-        "scifi"
+        "sprite",
+        "game"
       ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/scifi-creature-tileset-mini-32x32-scifi-creature-icons"
+      "category": "sprite"
     },
     {
-      "key": "character-unknown-48",
-      "file": "character-unknown-48.png",
-      "source": "https://opengameart.org/sites/default/files/creatures%20edit_0.png",
+      "key": "unknown-1-7",
+      "file": "unknown-1-7.png",
+      "source": "",
+      "width": 697,
+      "height": 506,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-1-72",
+      "file": "unknown-1-72.png",
+      "source": "",
       "width": 128,
       "height": 960,
-      "orientation": "portrait",
-      "license": "CC-BY",
-      "tags": [
-        "character",
-        "unknown",
-        "robot",
-        "scifi"
-      ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/scifi-creature-tileset-mini-32x32-scifi-creature-icons",
-      "isSpritesheet": true,
-      "frameWidth": 128,
-      "frameHeight": 16,
-      "frameCount": 60
-    },
-    {
-      "key": "character-unknown-49",
-      "file": "character-unknown-49.png",
-      "source": "https://opengameart.org/sites/default/files/cyberanimated.gif",
-      "width": 32,
-      "height": 960,
-      "orientation": "portrait",
-      "license": "CC-BY",
-      "tags": [
-        "character",
-        "unknown",
-        "robot",
-        "scifi"
-      ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/scifi-creature-tileset-mini-32x32-scifi-creature-icons",
-      "isSpritesheet": true,
-      "frameWidth": 32,
-      "frameHeight": 32,
-      "frameCount": 30
-    },
-    {
-      "key": "character-unknown-50",
-      "file": "character-unknown-50.png",
-      "source": "https://opengameart.org/sites/default/files/db32-Char.png",
-      "width": 32,
-      "height": 48,
-      "orientation": "portrait",
       "license": "CC0",
       "tags": [
         "character",
-        "unknown",
-        "robot",
-        "scifi"
+        "sprite",
+        "game"
       ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/hero-spritesheets-ars-notoria"
+      "category": "sprite"
     },
     {
-      "key": "character-unknown-51",
-      "file": "character-unknown-51.png",
-      "source": "https://opengameart.org/sites/default/files/player-spritemap-v9.png",
+      "key": "unknown-1-75",
+      "file": "unknown-1-75.png",
+      "source": "",
       "width": 368,
       "height": 200,
-      "orientation": "landscape",
       "license": "CC0",
       "tags": [
         "character",
-        "unknown",
-        "robot",
-        "scifi"
+        "sprite",
+        "game"
       ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/hero-spritesheets-ars-notoria"
+      "category": "sprite"
     },
     {
-      "key": "character-unknown-52",
-      "file": "character-unknown-52.png",
-      "source": "https://opengameart.org/sites/default/files/robe05-spritemap.png",
-      "width": 368,
-      "height": 200,
-      "orientation": "landscape",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "robot",
-        "scifi"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/hero-spritesheets-ars-notoria"
-    },
-    {
-      "key": "character-unknown-53",
-      "file": "character-unknown-53.png",
-      "source": "https://opengameart.org/sites/default/files/preview-small_0.png",
-      "width": 96,
-      "height": 96,
-      "orientation": "square",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "robot",
-        "scifi"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/sci-fi-platformer-tileset"
-    },
-    {
-      "key": "character-unknown-54",
-      "file": "character-unknown-54.png",
-      "source": "https://opengameart.org/sites/default/files/preview-large.png",
+      "key": "unknown-1-78",
+      "file": "unknown-1-78.png",
+      "source": "",
       "width": 512,
       "height": 352,
-      "orientation": "landscape",
       "license": "CC0",
       "tags": [
         "character",
-        "unknown",
-        "robot",
-        "scifi"
+        "sprite",
+        "game"
       ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/sci-fi-platformer-tileset"
+      "category": "sprite"
     },
     {
-      "key": "character-unknown-55",
-      "file": "character-unknown-55.png",
-      "source": "https://opengameart.org/sites/default/files/preview-large-alt.png",
-      "width": 512,
-      "height": 352,
-      "orientation": "landscape",
-      "license": "CC0",
-      "tags": [
-        "character",
-        "unknown",
-        "robot",
-        "scifi"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/sci-fi-platformer-tileset"
-    },
-    {
-      "key": "character-unknown-56",
-      "file": "character-unknown-56.png",
-      "source": "https://opengameart.org/sites/default/files/Preview3.png",
-      "width": 749,
-      "height": 590,
-      "orientation": "landscape",
-      "license": "CC-BY",
-      "tags": [
-        "character",
-        "unknown",
-        "robot",
-        "scifi"
-      ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/lpc-skorpios-scifi-sprite-pack"
-    },
-    {
-      "key": "character-unknown-57",
-      "file": "character-unknown-57.png",
-      "source": "https://opengameart.org/sites/default/files/Preview2_2.png",
+      "key": "unknown-1-81",
+      "file": "unknown-1-81.png",
+      "source": "",
       "width": 835,
       "height": 580,
-      "orientation": "landscape",
-      "license": "CC-BY",
+      "license": "CC0",
       "tags": [
         "character",
-        "unknown",
-        "robot",
-        "scifi"
+        "sprite",
+        "game"
       ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/lpc-skorpios-scifi-sprite-pack"
+      "category": "sprite"
     },
     {
-      "key": "character-unknown-58",
-      "file": "character-unknown-58.png",
-      "source": "https://opengameart.org/sites/default/files/Preview1.png",
+      "key": "unknown-1-84",
+      "file": "unknown-1-84.png",
+      "source": "",
+      "width": 192,
+      "height": 576,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-1",
+      "file": "unknown-1.png",
+      "source": "",
+      "width": 960,
+      "height": 960,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-12",
+      "file": "unknown-12.png",
+      "source": "",
+      "width": 443,
+      "height": 1000,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-15",
+      "file": "unknown-15.png",
+      "source": "",
+      "width": 100,
+      "height": 100,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-18",
+      "file": "unknown-18.png",
+      "source": "",
+      "width": 100,
+      "height": 100,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-11",
+      "file": "unknown-2-11.png",
+      "source": "",
+      "width": 384,
+      "height": 160,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-14",
+      "file": "unknown-2-14.png",
+      "source": "",
+      "width": 960,
+      "height": 960,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-17",
+      "file": "unknown-2-17.png",
+      "source": "",
+      "width": 128,
+      "height": 32,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-20",
+      "file": "unknown-2-20.png",
+      "source": "",
+      "width": 384,
+      "height": 160,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-23",
+      "file": "unknown-2-23.png",
+      "source": "",
+      "width": 384,
+      "height": 224,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-26",
+      "file": "unknown-2-26.png",
+      "source": "",
+      "width": 960,
+      "height": 960,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-29",
+      "file": "unknown-2-29.png",
+      "source": "",
+      "width": 799,
+      "height": 542,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-32",
+      "file": "unknown-2-32.png",
+      "source": "",
+      "width": 384,
+      "height": 224,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-35",
+      "file": "unknown-2-35.png",
+      "source": "",
+      "width": 512,
+      "height": 512,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-38",
+      "file": "unknown-2-38.png",
+      "source": "",
+      "width": 791,
+      "height": 575,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-41",
+      "file": "unknown-2-41.png",
+      "source": "",
+      "width": 384,
+      "height": 224,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-44",
+      "file": "unknown-2-44.png",
+      "source": "",
+      "width": 512,
+      "height": 512,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-47",
+      "file": "unknown-2-47.png",
+      "source": "",
+      "width": 350,
+      "height": 620,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-5",
+      "file": "unknown-2-5.png",
+      "source": "",
+      "width": 791,
+      "height": 575,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-50",
+      "file": "unknown-2-50.png",
+      "source": "",
+      "width": 799,
+      "height": 542,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-53",
+      "file": "unknown-2-53.png",
+      "source": "",
+      "width": 384,
+      "height": 160,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-58",
+      "file": "unknown-2-58.png",
+      "source": "",
+      "width": 128,
+      "height": 128,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-61",
+      "file": "unknown-2-61.png",
+      "source": "",
+      "width": 289,
+      "height": 224,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-64",
+      "file": "unknown-2-64.png",
+      "source": "",
+      "width": 645,
+      "height": 870,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-67",
+      "file": "unknown-2-67.png",
+      "source": "",
+      "width": 60,
+      "height": 60,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-70",
+      "file": "unknown-2-70.png",
+      "source": "",
+      "width": 128,
+      "height": 128,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-73",
+      "file": "unknown-2-73.png",
+      "source": "",
+      "width": 32,
+      "height": 960,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-76",
+      "file": "unknown-2-76.png",
+      "source": "",
+      "width": 368,
+      "height": 200,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-79",
+      "file": "unknown-2-79.png",
+      "source": "",
+      "width": 512,
+      "height": 352,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-8",
+      "file": "unknown-2-8.png",
+      "source": "",
+      "width": 799,
+      "height": 542,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-2-82",
+      "file": "unknown-2-82.png",
+      "source": "",
       "width": 798,
       "height": 590,
-      "orientation": "landscape",
-      "license": "CC-BY",
+      "license": "CC0",
       "tags": [
         "character",
-        "unknown",
-        "robot",
-        "scifi"
+        "sprite",
+        "game"
       ],
-      "category": "sprite",
-      "sourceUrl": "https://opengameart.org/content/lpc-skorpios-scifi-sprite-pack"
+      "category": "sprite"
     },
     {
-      "key": "ninja-unknown",
-      "file": "ninja-unknown.png",
-      "source": "https://opengameart.org/sites/default/files/Tree0.png",
-      "width": 192,
-      "height": 576,
-      "orientation": "portrait",
-      "license": "CC-BY",
+      "key": "unknown-2",
+      "file": "unknown-2.png",
+      "source": "",
+      "width": 960,
+      "height": 960,
+      "license": "CC0",
       "tags": [
-        "ninja",
-        "unknown",
         "character",
-        "stealth"
+        "sprite",
+        "game"
       ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/dawnlike-16x16-universal-rogue-like-tileset-v181",
-      "isSpritesheet": true,
-      "frameWidth": 192,
-      "frameHeight": 192,
-      "frameCount": 3
+      "category": "sprite"
     },
     {
-      "key": "ninja-unknown-1",
-      "file": "ninja-unknown-1.png",
-      "source": "https://opengameart.org/sites/default/files/Tree1.png",
+      "key": "unknown-21",
+      "file": "unknown-21.png",
+      "source": "",
+      "width": 384,
+      "height": 224,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-24",
+      "file": "unknown-24.png",
+      "source": "",
+      "width": 443,
+      "height": 1000,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-27",
+      "file": "unknown-27.png",
+      "source": "",
+      "width": 320,
+      "height": 320,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-3",
+      "file": "unknown-3.png",
+      "source": "",
+      "width": 392,
+      "height": 236,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-30",
+      "file": "unknown-30.png",
+      "source": "",
+      "width": 384,
+      "height": 224,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-33",
+      "file": "unknown-33.png",
+      "source": "",
       "width": 192,
       "height": 576,
-      "orientation": "portrait",
-      "license": "CC-BY",
+      "license": "CC0",
       "tags": [
-        "ninja",
-        "unknown",
         "character",
-        "stealth"
+        "sprite",
+        "game"
       ],
-      "category": "spritesheet",
-      "sourceUrl": "https://opengameart.org/content/dawnlike-16x16-universal-rogue-like-tileset-v181",
-      "isSpritesheet": true,
-      "frameWidth": 192,
-      "frameHeight": 192,
-      "frameCount": 3
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-36",
+      "file": "unknown-36.png",
+      "source": "",
+      "width": 392,
+      "height": 236,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-39",
+      "file": "unknown-39.png",
+      "source": "",
+      "width": 384,
+      "height": 224,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-42",
+      "file": "unknown-42.png",
+      "source": "",
+      "width": 192,
+      "height": 576,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-45",
+      "file": "unknown-45.png",
+      "source": "",
+      "width": 100,
+      "height": 100,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-48",
+      "file": "unknown-48.png",
+      "source": "",
+      "width": 320,
+      "height": 320,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-51",
+      "file": "unknown-51.png",
+      "source": "",
+      "width": 100,
+      "height": 100,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-54",
+      "file": "unknown-54.png",
+      "source": "",
+      "width": 800,
+      "height": 475,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-56",
+      "file": "unknown-56.png",
+      "source": "",
+      "width": 112,
+      "height": 112,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-59",
+      "file": "unknown-59.png",
+      "source": "",
+      "width": 313,
+      "height": 207,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-6",
+      "file": "unknown-6.png",
+      "source": "",
+      "width": 320,
+      "height": 320,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-62",
+      "file": "unknown-62.png",
+      "source": "",
+      "width": 681,
+      "height": 866,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-65",
+      "file": "unknown-65.png",
+      "source": "",
+      "width": 150,
+      "height": 75,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-68",
+      "file": "unknown-68.png",
+      "source": "",
+      "width": 4608,
+      "height": 1024,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-71",
+      "file": "unknown-71.png",
+      "source": "",
+      "width": 99,
+      "height": 99,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-74",
+      "file": "unknown-74.png",
+      "source": "",
+      "width": 32,
+      "height": 48,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-77",
+      "file": "unknown-77.png",
+      "source": "",
+      "width": 96,
+      "height": 96,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-80",
+      "file": "unknown-80.png",
+      "source": "",
+      "width": 749,
+      "height": 590,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-83",
+      "file": "unknown-83.png",
+      "source": "",
+      "width": 192,
+      "height": 576,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown-9",
+      "file": "unknown-9.png",
+      "source": "",
+      "width": 100,
+      "height": 100,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
+    },
+    {
+      "key": "unknown",
+      "file": "unknown.png",
+      "source": "",
+      "width": 443,
+      "height": 1000,
+      "license": "CC0",
+      "tags": [
+        "character",
+        "sprite",
+        "game"
+      ],
+      "category": "sprite"
     }
   ],
   "audio": [],

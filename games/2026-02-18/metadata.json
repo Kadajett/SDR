@@ -1,14 +1,14 @@
 {
   "id": "2026-02-18",
   "date": "2026-02-18",
-  "title": "Stone Age Curling",
-  "description": "Launch prehistoric stones across the ice and use growth rays to make them bigger! Land closest to the center to score points.",
+  "title": "Stone Age Slide",
+  "description": "Prehistoric curling meets sci-fi! Slide your stone down the ice, then zap it with your growth ray to make it bigger. Closest to the center wins the round!",
   "playerCount": {
     "min": 2,
     "max": 5
   },
-  "controls": "Left Stick/WASD: Aim direction | SPACE: Hold to charge power, release to shoot stone | Z: Fire growth ray to enlarge your stone",
-  "howToPlay": "Take turns launching stones toward the target circles. Use your growth ray to make your stone bigger - bigger stones can knock opponents away! Score points based on how close your stones are to the center. First to 50 points wins, or highest score when time runs out!",
+  "controls": "Hold R2/SPACE to charge throw power, release to throw. Press A/Z to activate growth ray on your stone. Left stick/WASD for menu navigation.",
+  "howToPlay": "Each player throws one stone per round trying to get closest to the center target. Charge your throw power and release to slide. Use your growth ray once per round to make your stone bigger and harder to beat. Win 2 out of 3 rounds to claim victory!",
   "seed": "2026-02-18-0",
   "topics": {
     "seed": "2026-02-18-0",
@@ -19,8 +19,12 @@
   "assets": {
     "sprites": [
       {
-        "key": "stone",
-        "url": "https://opengameart.org/sites/default/files/hyptosis_sprites-and-tiles-for-you_0.png"
+        "key": "ball",
+        "url": "https://opengameart.org/sites/default/files/ball_0.png"
+      },
+      {
+        "key": "star",
+        "url": "https://opengameart.org/sites/default/files/star_0.png"
       }
     ],
     "audio": [],
