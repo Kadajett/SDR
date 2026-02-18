@@ -17,8 +17,15 @@
   #loading .status { font-size: 0.9em; color: #e94560; }
   #loading button { padding: 15px 40px; font-size: 1.2em; background: #e94560; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; }
   #loading button:active { background: #c73650; }
-  #game-container { width: 100vw; height: 100vh; display: none; }
+  #game-container { width: 100vw; height: 100vh; display: none; position: relative; }
   #game-container canvas { display: block; width: 100% !important; height: 100% !important; object-fit: contain; }
+  /* Virtual touch controls */
+  #touch-controls { display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; pointer-events: none; }
+  #joystick-zone { position: fixed; bottom: 30px; left: 30px; width: 130px; height: 130px; pointer-events: all; }
+  #joystick-base { width: 130px; height: 130px; border-radius: 50%; background: rgba(255,255,255,0.12); border: 2px solid rgba(255,255,255,0.25); position: absolute; }
+  #joystick-thumb { width: 52px; height: 52px; border-radius: 50%; background: rgba(233,69,96,0.8); position: absolute; top: 39px; left: 39px; transition: none; }
+  #btn-action { position: fixed; bottom: 55px; right: 40px; width: 68px; height: 68px; border-radius: 50%; background: rgba(233,69,96,0.8); border: 2px solid rgba(255,255,255,0.3); color: white; font-size: 1.4em; display: flex; align-items: center; justify-content: center; pointer-events: all; user-select: none; -webkit-user-select: none; }
+  #btn-space { position: fixed; bottom: 140px; right: 40px; width: 54px; height: 54px; border-radius: 50%; background: rgba(100,100,200,0.8); border: 2px solid rgba(255,255,255,0.3); color: white; font-size: 1em; display: flex; align-items: center; justify-content: center; pointer-events: all; user-select: none; -webkit-user-select: none; }
 </style>
 </head>
 <body>
@@ -32,8 +39,77 @@
 </div>
 <div id="game-container"></div>
 
+<!-- Virtual touch controls (shown on mobile) -->
+<div id="touch-controls">
+  <div id="joystick-zone">
+    <div id="joystick-base"></div>
+    <div id="joystick-thumb"></div>
+  </div>
+  <div id="btn-action">⚡</div>
+  <div id="btn-space">🔵</div>
+</div>
+
 <script>
+  const isMobile = /Android|iPhone|iPad|iPod|Touch/i.test(navigator.userAgent) || ('ontouchstart' in window);
   let gameMetadata = null;
+
+  // Virtual joystick state — exposed globally so game.js can read it
+  window.touchInput = { x: 0, y: 0, buttons: { action: false, space: false, a: false, b: false } };
+
+  function initTouchControls() {
+    if (!isMobile) return;
+    document.getElementById('touch-controls').style.display = 'block';
+
+    const zone = document.getElementById('joystick-zone');
+    const thumb = document.getElementById('joystick-thumb');
+    const base = document.getElementById('joystick-base');
+    const radius = 39;
+    let activeId = null, originX = 0, originY = 0;
+
+    zone.addEventListener('touchstart', e => {
+      e.preventDefault();
+      const t = e.changedTouches[0];
+      const r = zone.getBoundingClientRect();
+      activeId = t.identifier;
+      originX = r.left + r.width / 2;
+      originY = r.top + r.height / 2;
+    }, { passive: false });
+
+    zone.addEventListener('touchmove', e => {
+      e.preventDefault();
+      for (const t of e.changedTouches) {
+        if (t.identifier !== activeId) continue;
+        let dx = t.clientX - originX, dy = t.clientY - originY;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist > radius) { dx = dx/dist*radius; dy = dy/dist*radius; }
+        thumb.style.left = (39 + dx) + 'px';
+        thumb.style.top  = (39 + dy) + 'px';
+        window.touchInput.x = dx / radius;
+        window.touchInput.y = dy / radius;
+      }
+    }, { passive: false });
+
+    const resetJoy = e => {
+      for (const t of e.changedTouches) {
+        if (t.identifier !== activeId) continue;
+        activeId = null;
+        thumb.style.left = '39px'; thumb.style.top = '39px';
+        window.touchInput.x = 0; window.touchInput.y = 0;
+      }
+    };
+    zone.addEventListener('touchend', resetJoy, { passive: false });
+    zone.addEventListener('touchcancel', resetJoy, { passive: false });
+
+    // Action buttons
+    const btnAction = document.getElementById('btn-action');
+    btnAction.addEventListener('touchstart', e => { e.preventDefault(); window.touchInput.buttons.action = true; window.touchInput.buttons.a = true; }, { passive: false });
+    btnAction.addEventListener('touchend', e => { e.preventDefault(); window.touchInput.buttons.action = false; window.touchInput.buttons.a = false; }, { passive: false });
+
+    const btnSpace = document.getElementById('btn-space');
+    btnSpace.addEventListener('touchstart', e => { e.preventDefault(); window.touchInput.buttons.space = true; window.touchInput.buttons.b = true; }, { passive: false });
+    btnSpace.addEventListener('touchend', e => { e.preventDefault(); window.touchInput.buttons.space = false; window.touchInput.buttons.b = false; }, { passive: false });
+  }
+
 
   async function init() {
     try {
@@ -68,12 +144,15 @@
       document.getElementById('loading').style.display = 'none';
       document.getElementById('game-container').style.display = 'block';
 
+      // Init touch controls if on mobile
+      initTouchControls();
+
       // Dynamically import the game module (ES module bundle)
       const gameModule = await import('/games/' + gameMetadata.date + '/client/game.js');
 
       // Call the launch function with the container element
       if (gameModule.launch) {
-        gameModule.launch('game-container');
+        gameModule.launch('game-container', { isMobile, touchInput: window.touchInput });
       } else if (gameModule.default) {
         // Fallback: if only default export, try to use it
         console.log('No launch function found, using default export');

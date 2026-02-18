@@ -163,6 +163,42 @@ const input = this.inputManager.getState();
 // input.buttons: { space: boolean, action: boolean, a: boolean, b: boolean, x: boolean, y: boolean }
 \`\`\`
 
+### Touch / Mobile Support
+
+The web client detects mobile automatically and renders a virtual joystick + 2 buttons.
+Touch state is merged into `window.touchInput` and also passed to `launch()` as options.
+
+In your `launch()` function and `onUpdate()`, merge touch input with keyboard/gamepad:
+
+\`\`\`typescript
+export function launch(containerId: string, options?: { isMobile?: boolean; touchInput?: { x: number; y: number; buttons: Record<string, boolean> } }): { destroy: () => void } {
+  const game = new Phaser.Game({ ... });
+  // Pass options to scene registry so onUpdate can access them
+  game.events.once('ready', () => {
+    game.registry.set('touchInput', options?.touchInput ?? null);
+    game.registry.set('isMobile', options?.isMobile ?? false);
+  });
+  return { destroy: () => game.destroy(true) };
+}
+
+// In onUpdate():
+onUpdate(dt: number, players: PlayerState[]): void {
+  const kbInput = this.inputManager.getState();
+  const touch = this.registry.get('touchInput') as { x: number; y: number; buttons: Record<string, boolean> } | null;
+
+  // Merge: keyboard/gamepad takes priority, touch fills in if keys are neutral
+  const input = {
+    x: kbInput.x !== 0 ? kbInput.x : (touch?.x ?? 0),
+    y: kbInput.y !== 0 ? kbInput.y : (touch?.y ?? 0),
+    buttons: {
+      ...kbInput.buttons,
+      ...(touch ? Object.fromEntries(Object.entries(touch.buttons).map(([k, v]) => [k, v || kbInput.buttons[k as keyof typeof kbInput.buttons]])) : {}),
+    }
+  };
+  // Use merged input for movement, actions, etc.
+}
+\`\`\`
+
 ### HUD
 \`\`\`typescript
 import { HUD } from "@sdr/engine";
@@ -390,6 +426,7 @@ Also available: \`.sendMessage(type, data)\` to send arbitrary messages to the s
 20. GameState does NOT have \`getPlayerCustomOr()\` — use \`getPlayerCustom<T>(sessionId, key)\` and handle undefined yourself, or use \`getCustomOr(key, default)\` for non-player state.
 15. All function parameters and variables must have explicit types (strict mode is enabled)
 16. Always declare \`private mpClient: MultiplayerClient | null = null;\` on the scene class and implement \`setMultiplayerClient(client: MultiplayerClient): void { this.mpClient = client; }\`
+17. Always support touch/mobile: accept the optional \`options\` parameter in \`launch()\`, store \`touchInput\` in the Phaser registry, and merge it with keyboard input in \`onUpdate()\` as shown above.
 `;
 
 /** @deprecated Use buildSystemPrompt() instead */
