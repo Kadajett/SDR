@@ -62,6 +62,7 @@ import {
 } from "bitecs";
 import type { PlayerState, EntityDef, Vec2 } from "@sdr/shared";
 import { BaseScene, InputManager } from "@sdr/engine";
+import type { InputState } from "@sdr/engine";
 
 // ============================================================
 // 1. COMPONENTS (bitECS SoA format)
@@ -69,8 +70,9 @@ import { BaseScene, InputManager } from "@sdr/engine";
 const Position = { x: [] as number[], y: [] as number[] };
 const Velocity = { dx: [] as number[], dy: [] as number[] };
 const Health = { current: [] as number[], max: [] as number[] };
-const SpriteRef = { key: [] as string[], gameObject: [] as (Phaser.GameObjects.Sprite | null)[] };
 const PlayerControlled = { sessionId: [] as string[] };
+// Phaser GameObjects are stored in a Map, NOT in ECS components:
+const gameObjects = new Map<number, Phaser.GameObjects.Sprite | Phaser.GameObjects.Rectangle>();
 // Add more components as needed for this game
 
 // ============================================================
@@ -90,24 +92,28 @@ function movementSystem(world: ReturnType<typeof createWorld>, dt: number): void
 }
 
 function inputSystem(
-  world: ReturnType<typeof createWorld>,
-  input: { moveX: number; moveY: number; action1: boolean },
+  _world: ReturnType<typeof createWorld>,
+  input: InputState,   // Use InputState, not a custom type
   localPlayerEid: number,
   speed: number,
 ): void {
-  Velocity.dx[localPlayerEid] = input.moveX * speed;
-  Velocity.dy[localPlayerEid] = input.moveY * speed;
+  // Apply deadzone and normalise diagonal movement
+  const DEADZONE = 0.15;
+  let dx = Math.abs(input.moveX) > DEADZONE ? input.moveX : 0;
+  let dy = Math.abs(input.moveY) > DEADZONE ? input.moveY : 0;
+  const mag = Math.hypot(dx, dy);
+  if (mag > 1) { dx /= mag; dy /= mag; }
+
+  Velocity.dx[localPlayerEid] = dx * speed;
+  Velocity.dy[localPlayerEid] = dy * speed;
 }
 
-function renderSystem(
-  world: ReturnType<typeof createWorld>,
-  scene: Phaser.Scene,
-): void {
-  for (const eid of query(world, [Position, SpriteRef])) {
-    const sprite = SpriteRef.gameObject[eid];
-    if (sprite) {
-      sprite.x = Position.x[eid];
-      sprite.y = Position.y[eid];
+function renderSystem(world: ReturnType<typeof createWorld>): void {
+  for (const eid of query(world, [Position])) {
+    const obj = gameObjects.get(eid);
+    if (obj) {
+      obj.x = Position.x[eid];
+      obj.y = Position.y[eid];
     }
   }
 }
@@ -128,8 +134,21 @@ export default class TodaysGame extends BaseScene {
 
   create(): void {
     this.world = createWorld();
+
+    // Set up observers for entity lifecycle BEFORE creating any entities.
+    // CRITICAL: add type-tag components BEFORE Position so observers fire correctly.
+    observe(this.world, onAdd(Position, Visual), (eid: number) => {
+      const sprite = scene.add.sprite(Position.x[eid], Position.y[eid], "player");
+      gameObjects.set(eid, sprite);
+    });
+    observe(this.world, onRemove(Position, Visual), (eid: number) => {
+      gameObjects.get(eid)?.destroy();
+      gameObjects.delete(eid);
+    });
+
+    // InputManager handles gamepad, keyboard, AND touch (virtual joystick on mobile)
     this.inputManager = new InputManager(this);
-    this.inputManager.setup();
+    this.inputManager.setup(); // No arguments needed
 
     // Create entities, set up physics, load level
     // ...
@@ -138,10 +157,17 @@ export default class TodaysGame extends BaseScene {
   // REQUIRED: called every frame
   onUpdate(dt: number, players: PlayerState[]): void {
     const input = this.inputManager.getState();
+    // input.moveX/moveY: -1..1 (left stick / WASD / touch joystick)
+    // input.action1: A / Space / touch-A
+    // input.action2: B / Shift / touch-B
+    // input.action3: X / E
+    // input.action4: Y / Q
+    // input.pause: Start / Escape
+    // input.lastDevice: "keyboard" | "gamepad" | "touch"
 
     inputSystem(this.world, input, this.localPlayerEid, 200);
     movementSystem(this.world, dt);
-    renderSystem(this.world, this);
+    renderSystem(this.world);
     // ... more systems
   }
 
@@ -150,11 +176,6 @@ export default class TodaysGame extends BaseScene {
     // Example: first to 10 points wins
     const winner = players.find((p) => (p.score ?? 0) >= 10);
     return winner?.sessionId ?? null;
-  }
-
-  // OPTIONAL: handle collisions
-  onCollision(a: Phaser.GameObjects.GameObject, b: Phaser.GameObjects.GameObject): void {
-    // ...
   }
 }
 ```

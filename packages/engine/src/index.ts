@@ -1,6 +1,7 @@
 export { BaseGame } from "./core/Game.js";
 export { BaseScene } from "./core/Scene.js";
 export { InputManager } from "./core/InputManager.js";
+export type { InputState } from "./core/InputManager.js";
 export { AssetLoader } from "./core/AssetLoader.js";
 export { MultiplayerClient } from "./net/MultiplayerClient.js";
 export { StateSync } from "./net/StateSync.js";

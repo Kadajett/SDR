@@ -174,23 +174,49 @@ Every game MUST support both keyboard and gamepad simultaneously. Use this unifi
 
 ### InputState Interface
 
+The `InputState` type is exported directly from `@sdr/engine`. Import and use it:
+
+```typescript
+import { InputManager } from "@sdr/engine";
+import type { InputState } from "@sdr/engine";
+
+// In create():
+this.inputManager = new InputManager(this);
+this.inputManager.setup(); // handles gamepad, keyboard, AND touch (virtual joystick)
+
+// In onUpdate():
+const input: InputState = this.inputManager.getState();
+```
+
+The `InputState` interface:
+
 ```typescript
 interface InputState {
   moveX: number;          // -1.0 to 1.0 (horizontal movement)
   moveY: number;          // -1.0 to 1.0 (vertical movement)
-  aimX: number;           // -1.0 to 1.0 (aim/look horizontal)
-  aimY: number;           // -1.0 to 1.0 (aim/look vertical)
-  action1: boolean;       // A / Space - primary action
-  action2: boolean;       // B / Shift - secondary action
-  action3: boolean;       // X / E - tertiary action
-  action4: boolean;       // Y / Q - quaternary action
+  aimX: number;           // -1.0 to 1.0 (right stick horizontal)
+  aimY: number;           // -1.0 to 1.0 (right stick vertical)
+  action1: boolean;       // A / Space / touch-A — primary action
+  action2: boolean;       // B / Shift / touch-B — secondary action
+  action3: boolean;       // X / E — tertiary action
+  action4: boolean;       // Y / Q — quaternary action
   bumperLeft: boolean;    // LB / Tab
   bumperRight: boolean;   // RB / R
-  triggerLeft: number;    // LT / -- (0.0 to 1.0)
-  triggerRight: number;   // RT / -- (0.0 to 1.0)
+  triggerLeft: number;    // LT (0.0 to 1.0)
+  triggerRight: number;   // RT (0.0 to 1.0)
   pause: boolean;         // Start / Escape
+  lastDevice: "keyboard" | "gamepad" | "touch";
 }
 ```
+
+### Touch Controls (Mobile)
+
+`InputManager.setup()` automatically detects touch devices and creates:
+- Virtual joystick in the lower-left corner (provides `moveX`/`moveY`)
+- A button (lower-right, provides `action1`)
+- B button (upper-right of A, provides `action2`)
+
+No extra setup needed — works transparently alongside keyboard/gamepad.
 
 ### Default Control Scheme
 
@@ -209,67 +235,21 @@ interface InputState {
 | Pause | Menu/Start | Escape | Pause menu |
 | D-pad | D-pad | Arrow keys | Menu navigation, quick select |
 
-### Unified Input Reader Implementation
+### Using InputManager (ALWAYS use this, never roll your own)
+
+`InputManager` from `@sdr/engine` handles all three input sources and returns a unified `InputState`. It also creates the virtual joystick on touch devices automatically.
 
 ```typescript
-const DEADZONE = 0.15;
+// In create():
+this.inputManager = new InputManager(this);
+this.inputManager.setup();
 
-function readInput(
-  scene: Phaser.Scene,
-  pad: Phaser.Input.Gamepad.Gamepad | null,
-  cursors: Phaser.Types.Input.Keyboard.CursorKeys | null,
-  keys: Record<string, Phaser.Input.Keyboard.Key>
-): InputState {
-  const state: InputState = {
-    moveX: 0, moveY: 0,
-    aimX: 0, aimY: 0,
-    action1: false, action2: false,
-    action3: false, action4: false,
-    bumperLeft: false, bumperRight: false,
-    triggerLeft: 0, triggerRight: 0,
-    pause: false,
-  };
-
-  // Gamepad input (takes priority for analog precision)
-  if (pad && pad.connected) {
-    const lx = pad.leftStick.x;
-    const ly = pad.leftStick.y;
-    state.moveX = Math.abs(lx) > DEADZONE ? lx : 0;
-    state.moveY = Math.abs(ly) > DEADZONE ? ly : 0;
-
-    const rx = pad.rightStick.x;
-    const ry = pad.rightStick.y;
-    state.aimX = Math.abs(rx) > DEADZONE ? rx : 0;
-    state.aimY = Math.abs(ry) > DEADZONE ? ry : 0;
-
-    state.action1 = pad.A;
-    state.action2 = pad.B;
-    state.action3 = pad.X;
-    state.action4 = pad.Y;
-    state.bumperLeft = pad.L1;
-    state.bumperRight = pad.R1;
-    state.triggerLeft = pad.L2;
-    state.triggerRight = pad.R2;
-    state.pause = pad.isButtonDown(9);
-  }
-
-  // Keyboard input (merge, don't override)
-  if (keys.w?.isDown || cursors?.up?.isDown) state.moveY = -1;
-  if (keys.s?.isDown || cursors?.down?.isDown) state.moveY = 1;
-  if (keys.a?.isDown || cursors?.left?.isDown) state.moveX = -1;
-  if (keys.d?.isDown || cursors?.right?.isDown) state.moveX = 1;
-
-  if (keys.space?.isDown) state.action1 = true;
-  if (keys.shift?.isDown) state.action2 = true;
-  if (keys.e?.isDown) state.action3 = true;
-  if (keys.q?.isDown) state.action4 = true;
-  if (keys.tab?.isDown) state.bumperLeft = true;
-  if (keys.r?.isDown) state.bumperRight = true;
-  if (keys.esc?.isDown) state.pause = true;
-
-  return state;
-}
+// In onUpdate():
+const input = this.inputManager.getState();
+// input.moveX, input.moveY, input.action1, input.lastDevice, etc.
 ```
+
+Do NOT write your own `readInput` function or manage raw gamepad/keyboard objects. Use `InputManager`.
 
 ---
 
