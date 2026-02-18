@@ -32,10 +32,8 @@
 </div>
 <div id="game-container"></div>
 
-<script src="https://unpkg.com/colyseus.js@0.15.28/dist/colyseus.js"></script>
 <script>
   let gameMetadata = null;
-  let colyseusRoom = null;
 
   async function init() {
     try {
@@ -55,7 +53,7 @@
       document.getElementById('status').textContent = 'Ready to play!';
       document.getElementById('play-btn').style.display = 'inline-block';
     } catch (e) {
-      document.getElementById('status').textContent = 'Error: ' + e.message;
+      document.getElementById('status').textContent = 'Error loading game info: ' + e.message;
     }
   }
 
@@ -63,30 +61,25 @@
     const status = document.getElementById('status');
     const playBtn = document.getElementById('play-btn');
     playBtn.style.display = 'none';
-    status.textContent = 'Connecting to server...';
+    status.textContent = 'Loading game...';
 
     try {
-      // Connect to Colyseus
-      const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const client = new Colyseus.Client(wsProtocol + '//' + location.host);
-      colyseusRoom = await client.joinOrCreate('game', {
-        gameDate: gameMetadata.date
-      });
-      window.colyseusRoom = colyseusRoom;
-
-      status.textContent = 'Loading game...';
-
       // Hide loading, show game container
       document.getElementById('loading').style.display = 'none';
       document.getElementById('game-container').style.display = 'block';
 
-      // Dynamically import the game module
+      // Dynamically import the game module (ES module bundle)
       const gameModule = await import('/games/' + gameMetadata.date + '/client/game.js');
 
       // Call the launch function with the container element
       if (gameModule.launch) {
         gameModule.launch('game-container');
+      } else if (gameModule.default) {
+        // Fallback: if only default export, try to use it
+        console.log('No launch function found, using default export');
       } else {
+        document.getElementById('loading').style.display = 'flex';
+        document.getElementById('game-container').style.display = 'none';
         status.textContent = 'Error: game has no launch function';
       }
     } catch (e) {
@@ -94,7 +87,7 @@
       playBtn.style.display = 'inline-block';
       document.getElementById('loading').style.display = 'flex';
       document.getElementById('game-container').style.display = 'none';
-      console.error(e);
+      console.error('Game load error:', e);
     }
   }
 
