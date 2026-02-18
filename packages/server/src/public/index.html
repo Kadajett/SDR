@@ -19,13 +19,28 @@
   #loading button:active { background: #c73650; }
   #game-container { width: 100vw; height: 100vh; display: none; position: relative; }
   #game-container canvas { display: block; width: 100% !important; height: 100% !important; object-fit: contain; }
-  /* Virtual touch controls */
+  /* Virtual touch controls - Steam Deck layout */
   #touch-controls { display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; pointer-events: none; }
-  #joystick-zone { position: fixed; bottom: 30px; left: 30px; width: 130px; height: 130px; pointer-events: all; }
-  #joystick-base { width: 130px; height: 130px; border-radius: 50%; background: rgba(255,255,255,0.12); border: 2px solid rgba(255,255,255,0.25); position: absolute; }
-  #joystick-thumb { width: 52px; height: 52px; border-radius: 50%; background: rgba(233,69,96,0.8); position: absolute; top: 39px; left: 39px; transition: none; }
-  #btn-action { position: fixed; bottom: 55px; right: 40px; width: 68px; height: 68px; border-radius: 50%; background: rgba(233,69,96,0.8); border: 2px solid rgba(255,255,255,0.3); color: white; font-size: 1.4em; display: flex; align-items: center; justify-content: center; pointer-events: all; user-select: none; -webkit-user-select: none; }
-  #btn-space { position: fixed; bottom: 140px; right: 40px; width: 54px; height: 54px; border-radius: 50%; background: rgba(100,100,200,0.8); border: 2px solid rgba(255,255,255,0.3); color: white; font-size: 1em; display: flex; align-items: center; justify-content: center; pointer-events: all; user-select: none; -webkit-user-select: none; }
+  /* Left stick */
+  #joystick-zone { position: fixed; bottom: 40px; left: 30px; width: 130px; height: 130px; pointer-events: all; }
+  #joystick-base { width: 130px; height: 130px; border-radius: 50%; background: rgba(255,255,255,0.10); border: 2px solid rgba(255,255,255,0.22); position: absolute; }
+  #joystick-thumb { width: 52px; height: 52px; border-radius: 50%; background: rgba(233,69,96,0.75); position: absolute; top: 39px; left: 39px; }
+  /* Right stick */
+  #joystick-right-zone { position: fixed; bottom: 40px; right: 190px; width: 100px; height: 100px; pointer-events: all; }
+  #joystick-right-base { width: 100px; height: 100px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.18); position: absolute; }
+  #joystick-right-thumb { width: 40px; height: 40px; border-radius: 50%; background: rgba(100,180,255,0.7); position: absolute; top: 30px; left: 30px; }
+  /* Face buttons (ABXY) - right side diamond */
+  .facebtn { position: fixed; width: 56px; height: 56px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); color: white; font-size: 0.85em; font-weight: bold; display: flex; align-items: center; justify-content: center; pointer-events: all; user-select: none; -webkit-user-select: none; }
+  #btn-a { background: rgba(100,200,100,0.8); bottom: 40px; right: 40px; }
+  #btn-b { background: rgba(233,69,96,0.8); bottom: 100px; right: 10px; }
+  #btn-x { background: rgba(100,130,220,0.8); bottom: 100px; right: 72px; }
+  #btn-y { background: rgba(220,180,50,0.8); bottom: 160px; right: 40px; }
+  /* Shoulder buttons */
+  .shoulderbtn { position: fixed; pointer-events: all; user-select: none; -webkit-user-select: none; background: rgba(80,80,80,0.85); border: 2px solid rgba(255,255,255,0.2); color: white; font-size: 0.75em; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+  #btn-l1 { width: 70px; height: 36px; top: 10px; left: 10px; }
+  #btn-r1 { width: 70px; height: 36px; top: 10px; right: 10px; }
+  #btn-l2 { width: 60px; height: 30px; top: 52px; left: 15px; background: rgba(60,60,100,0.85); }
+  #btn-r2 { width: 60px; height: 30px; top: 52px; right: 15px; background: rgba(60,60,100,0.85); }
 </style>
 </head>
 <body>
@@ -39,75 +54,107 @@
 </div>
 <div id="game-container"></div>
 
-<!-- Virtual touch controls (shown on mobile) -->
+<!-- Virtual touch controls - Steam Deck layout (shown on mobile) -->
 <div id="touch-controls">
+  <!-- Left stick -->
   <div id="joystick-zone">
     <div id="joystick-base"></div>
     <div id="joystick-thumb"></div>
   </div>
-  <div id="btn-action">⚡</div>
-  <div id="btn-space">🔵</div>
+  <!-- Right stick -->
+  <div id="joystick-right-zone">
+    <div id="joystick-right-base"></div>
+    <div id="joystick-right-thumb"></div>
+  </div>
+  <!-- Face buttons ABXY -->
+  <div id="btn-a" class="facebtn">A</div>
+  <div id="btn-b" class="facebtn">B</div>
+  <div id="btn-x" class="facebtn">X</div>
+  <div id="btn-y" class="facebtn">Y</div>
+  <!-- Shoulder / trigger buttons -->
+  <div id="btn-l1" class="shoulderbtn">L1</div>
+  <div id="btn-r1" class="shoulderbtn">R1</div>
+  <div id="btn-l2" class="shoulderbtn">L2</div>
+  <div id="btn-r2" class="shoulderbtn">R2</div>
 </div>
 
 <script>
   const isMobile = /Android|iPhone|iPad|iPod|Touch/i.test(navigator.userAgent) || ('ontouchstart' in window);
   let gameMetadata = null;
 
-  // Virtual joystick state — exposed globally so game.js can read it
-  window.touchInput = { x: 0, y: 0, buttons: { action: false, space: false, a: false, b: false } };
+  // Virtual input state — exposed globally so game.js can read it
+  window.touchInput = {
+    x: 0, y: 0,       // left stick
+    rx: 0, ry: 0,     // right stick
+    buttons: { a: false, b: false, x: false, y: false, l1: false, r1: false, l2: false, r2: false, space: false, action: false, start: false, select: false }
+  };
 
-  function initTouchControls() {
-    if (!isMobile) return;
-    document.getElementById('touch-controls').style.display = 'block';
-
-    const zone = document.getElementById('joystick-zone');
-    const thumb = document.getElementById('joystick-thumb');
-    const base = document.getElementById('joystick-base');
-    const radius = 39;
-    let activeId = null, originX = 0, originY = 0;
-
+  function makeJoystick(zoneId, thumbId, radius, onMove, onReset) {
+    const zone = document.getElementById(zoneId);
+    const thumb = document.getElementById(thumbId);
+    const center = radius - (thumb.offsetWidth || 40) / 2;
+    let activeId = null, ox = 0, oy = 0;
     zone.addEventListener('touchstart', e => {
       e.preventDefault();
       const t = e.changedTouches[0];
       const r = zone.getBoundingClientRect();
-      activeId = t.identifier;
-      originX = r.left + r.width / 2;
-      originY = r.top + r.height / 2;
+      activeId = t.identifier; ox = r.left + r.width/2; oy = r.top + r.height/2;
     }, { passive: false });
-
     zone.addEventListener('touchmove', e => {
       e.preventDefault();
       for (const t of e.changedTouches) {
         if (t.identifier !== activeId) continue;
-        let dx = t.clientX - originX, dy = t.clientY - originY;
+        let dx = t.clientX - ox, dy = t.clientY - oy;
         const dist = Math.sqrt(dx*dx + dy*dy);
         if (dist > radius) { dx = dx/dist*radius; dy = dy/dist*radius; }
-        thumb.style.left = (39 + dx) + 'px';
-        thumb.style.top  = (39 + dy) + 'px';
-        window.touchInput.x = dx / radius;
-        window.touchInput.y = dy / radius;
+        thumb.style.left = (center + dx) + 'px'; thumb.style.top = (center + dy) + 'px';
+        onMove(dx/radius, dy/radius);
       }
     }, { passive: false });
-
-    const resetJoy = e => {
+    const reset = e => {
       for (const t of e.changedTouches) {
         if (t.identifier !== activeId) continue;
         activeId = null;
-        thumb.style.left = '39px'; thumb.style.top = '39px';
-        window.touchInput.x = 0; window.touchInput.y = 0;
+        thumb.style.left = center + 'px'; thumb.style.top = center + 'px';
+        onReset();
       }
     };
-    zone.addEventListener('touchend', resetJoy, { passive: false });
-    zone.addEventListener('touchcancel', resetJoy, { passive: false });
+    zone.addEventListener('touchend', reset, { passive: false });
+    zone.addEventListener('touchcancel', reset, { passive: false });
+  }
 
-    // Action buttons
-    const btnAction = document.getElementById('btn-action');
-    btnAction.addEventListener('touchstart', e => { e.preventDefault(); window.touchInput.buttons.action = true; window.touchInput.buttons.a = true; }, { passive: false });
-    btnAction.addEventListener('touchend', e => { e.preventDefault(); window.touchInput.buttons.action = false; window.touchInput.buttons.a = false; }, { passive: false });
+  function makeButton(id, downKeys, upKeys) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const set = (val) => { downKeys.forEach(k => window.touchInput.buttons[k] = val); };
+    el.addEventListener('touchstart', e => { e.preventDefault(); set(true); }, { passive: false });
+    el.addEventListener('touchend',   e => { e.preventDefault(); set(false); }, { passive: false });
+    el.addEventListener('touchcancel',e => { e.preventDefault(); set(false); }, { passive: false });
+  }
 
-    const btnSpace = document.getElementById('btn-space');
-    btnSpace.addEventListener('touchstart', e => { e.preventDefault(); window.touchInput.buttons.space = true; window.touchInput.buttons.b = true; }, { passive: false });
-    btnSpace.addEventListener('touchend', e => { e.preventDefault(); window.touchInput.buttons.space = false; window.touchInput.buttons.b = false; }, { passive: false });
+  function initTouchControls() {
+    if (!isMobile) return;
+    document.getElementById('touch-controls').style.display = 'block';
+    // Left stick
+    makeJoystick('joystick-zone', 'joystick-thumb', 39,
+      (x, y) => { window.touchInput.x = x; window.touchInput.y = y; },
+      ()      => { window.touchInput.x = 0; window.touchInput.y = 0; }
+    );
+    // Right stick
+    makeJoystick('joystick-right-zone', 'joystick-right-thumb', 30,
+      (x, y) => { window.touchInput.rx = x; window.touchInput.ry = y; },
+      ()      => { window.touchInput.rx = 0; window.touchInput.ry = 0; }
+    );
+    // Face buttons
+    makeButton('btn-a', ['a', 'action']);
+    makeButton('btn-b', ['b']);
+    makeButton('btn-x', ['x']);
+    makeButton('btn-y', ['y']);
+    // Shoulder / triggers
+    makeButton('btn-l1', ['l1']);
+    makeButton('btn-r1', ['r1']);
+    makeButton('btn-l2', ['l2']);
+    makeButton('btn-r2', ['r2', 'space']);
   }
 
 

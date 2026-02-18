@@ -158,9 +158,24 @@ this.inputManager.setup({ space: "SPACE", action: "Z" });
 
 // In onUpdate():
 const input = this.inputManager.getState();
-// input.x: -1 to 1 (left stick / WASD horizontal)
-// input.y: -1 to 1 (left stick / WASD vertical)
-// input.buttons: { space: boolean, action: boolean, a: boolean, b: boolean, x: boolean, y: boolean }
+// input.x: -1 to 1 (left stick / WASD / D-pad horizontal)
+// input.y: -1 to 1 (left stick / WASD / D-pad vertical)
+// input.rx: -1 to 1 (right stick horizontal)
+// input.ry: -1 to 1 (right stick vertical)
+// input.buttons: {
+//   a: boolean,       // Steam Deck A / keyboard Z
+//   b: boolean,       // Steam Deck B / keyboard X
+//   x: boolean,       // Steam Deck X / keyboard C
+//   y: boolean,       // Steam Deck Y / keyboard V
+//   l1: boolean,      // Left bumper / keyboard Q
+//   r1: boolean,      // Right bumper / keyboard E
+//   l2: boolean,      // Left trigger / keyboard Shift
+//   r2: boolean,      // Right trigger / keyboard Space
+//   space: boolean,   // alias for r2
+//   action: boolean,  // alias for a
+//   start: boolean,   // Menu / keyboard Enter
+//   select: boolean,  // View / keyboard Tab
+// }
 \`\`\`
 
 ### Touch / Mobile Support
