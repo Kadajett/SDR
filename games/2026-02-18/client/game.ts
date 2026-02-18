@@ -1,4 +1,4 @@
-import { BaseScene, InputManager, HUD } from "@sdr/engine";
+import { BaseScene, InputManager, MultiplayerClient, HUD } from "@sdr/engine";
 import type { PlayerState, EntityDef } from "@sdr/shared";
 import {
   createWorld,
@@ -14,268 +14,368 @@ import {
 // Components
 const Position = { x: [] as number[], y: [] as number[] };
 const Velocity = { dx: [] as number[], dy: [] as number[] };
-const Stone = { ownerId: [] as string[], size: [] as number[] };
-const Target = { ring: [] as number[] };
+const Stone = { ownerId: [] as string[], size: [] as number[], power: [] as number[] };
+const Target = { points: [] as number[] };
 const GrowthRay = { ownerId: [] as string[], active: [] as boolean[] };
-const Visual = { color: [] as number[], radius: [] as number[] };
+const Visual = { width: [] as number[], height: [] as number[], color: [] as number[] };
 
-type World = ReturnType<typeof createWorld>;
-
-interface StoneData {
-  eid: number;
-  ownerId: string;
-  x: number;
-  y: number;
-  dx: number;
-  dy: number;
-  size: number;
-}
-
-interface GrowthRayData {
-  eid: number;
-  ownerId: string;
-  active: boolean;
-}
+type WorldType = ReturnType<typeof createWorld>;
 
 export default class PrehistoricCurling extends BaseScene {
   entities: Record<string, EntityDef> = {};
 
-  private world!: World;
+  private world!: WorldType;
+  private mpClient: MultiplayerClient | null = null;
   private inputManager!: InputManager;
   private hud!: HUD;
-  private gameObjects!: Map<number, Phaser.GameObjects.Graphics>;
-  private targetSprite!: Phaser.GameObjects.Sprite;
-  private howToPlayText!: Phaser.GameObjects.Text;
-  private howToPlayTimer: number = 5;
-  private showingHowToPlay: boolean = true;
 
-  private readonly WORLD_WIDTH = 1280;
-  private readonly WORLD_HEIGHT = 800;
-  private readonly TARGET_X = 640;
-  private readonly TARGET_Y = 150;
-  private readonly START_Y = 700;
-  private readonly FRICTION = 0.95;
-  private readonly STONE_BASE_SIZE = 30;
-  private readonly MAX_STONE_SIZE = 100;
+  private gameObjects = new Map<number, Phaser.GameObjects.GameObject>();
+  private stoneSprites = new Map<number, Phaser.GameObjects.Sprite>();
+  private rayGraphics = new Map<number, Phaser.GameObjects.Graphics>();
+
+  private hasShot = false;
+  private shootCooldown = 0;
+  private rayActive = false;
+  private rayCooldown = 0;
+
+  private powerMeter: Phaser.GameObjects.Rectangle | null = null;
+  private powerBg: Phaser.GameObjects.Rectangle | null = null;
+  private powerText: Phaser.GameObjects.Text | null = null;
+
+  private howToPlayOverlay: Phaser.GameObjects.Container | null = null;
+  private overlayTimer = 5;
 
   constructor() {
     super({ key: "PrehistoricCurling" });
   }
 
+  setMultiplayerClient(client: MultiplayerClient): void {
+    this.mpClient = client;
+    this.mpClient.setCallbacks({
+      onPlayerJoin: (player: PlayerState) => {
+        this.onPlayerJoin(player);
+      },
+      onPlayerLeave: (sessionId: string) => {
+        this.onPlayerLeave(sessionId);
+      },
+      onStateChange: (state: Record<string, unknown>) => {
+        this.handleStateChange(state);
+      },
+      onGameEvent: (event: string, data: unknown) => {
+        this.handleGameEvent(event, data);
+      },
+      onError: (error: Error) => {
+        console.error("Multiplayer error:", error);
+      },
+    });
+  }
+
   preload(): void {
-    // Load star sprite for target
-    this.load.image("star", "/games/DATE/assets/star.png");
+    this.load.spritesheet(
+      "stone",
+      "/games/DATE/assets/character-unknown-1.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
   }
 
   create(): void {
-    // Initialize ECS world
     this.world = createWorld();
-    this.gameObjects = new Map();
-
-    // Set up background
-    this.add.rectangle(640, 400, 1280, 800, 0x8b7355);
-
-    // Create target rings
-    this.add.circle(this.TARGET_X, this.TARGET_Y, 80, 0xff0000, 0.3);
-    this.add.circle(this.TARGET_X, this.TARGET_Y, 60, 0xffff00, 0.3);
-    this.add.circle(this.TARGET_X, this.TARGET_Y, 40, 0x00ff00, 0.3);
-
-    // Add star sprite at center
-    this.targetSprite = this.add.sprite(this.TARGET_X, this.TARGET_Y, "star");
-    this.targetSprite.setScale(0.3);
-    this.targetSprite.setAlpha(0.7);
-
-    // Set up input
     this.inputManager = new InputManager(this);
-    this.inputManager.setup({ throw: "A", grow: "B" });
+    this.inputManager.setup({ space: "SPACE", action: "Z" });
 
-    // Set up HUD
     this.hud = new HUD(this);
     this.hud.create();
 
-    // How to Play overlay
-    const overlay = this.add.rectangle(640, 400, 800, 400, 0x000000, 0.8);
-    this.howToPlayText = this.add.text(640, 300, "HOW TO PLAY\n\nAim with stick, press A to throw stone\nPress B to activate growth ray\nGrow your stones, shrink opponents!\nClosest to center wins!", {
-      fontSize: "28px",
+    // Background
+    this.add.rectangle(640, 400, 1280, 800, 0x2d5016);
+
+    // Ice rink
+    this.add.rectangle(640, 400, 1200, 700, 0xb8d4e8);
+
+    // Target circles
+    this.createTargetCircles();
+
+    // Power meter UI
+    this.powerBg = this.add.rectangle(100, 750, 200, 30, 0x333333);
+    this.powerMeter = this.add.rectangle(100, 750, 0, 30, 0xff0000);
+    this.powerText = this.add.text(100, 760, "POWER", {
+      fontSize: "16px",
       color: "#ffffff",
-      align: "center",
-      fontFamily: "Arial",
     });
-    this.howToPlayText.setOrigin(0.5);
+    this.powerText.setOrigin(0.5, 0.5);
 
-    // Set up observers for entity lifecycle
-    observe(this.world, onAdd(Position, Stone, Visual), (eid: number) => {
-      const graphics = this.add.graphics();
-      this.gameObjects.set(eid, graphics);
-      this.updateStoneVisual(eid);
+    // How to Play overlay
+    this.createHowToPlayOverlay();
+
+    // Set up observers
+    this.setupObservers();
+  }
+
+  private createTargetCircles(): void {
+    const centerX = 640;
+    const centerY = 200;
+
+    // Outer circle (5 points)
+    const outer = this.add.circle(centerX, centerY, 100, 0xff6b6b, 0.5);
+    const outerEid = addEntity(this.world);
+    addComponent(this.world, outerEid, Position);
+    addComponent(this.world, outerEid, Target);
+    Position.x[outerEid] = centerX;
+    Position.y[outerEid] = centerY;
+    Target.points[outerEid] = 5;
+    this.gameObjects.set(outerEid, outer);
+
+    // Middle circle (10 points)
+    const middle = this.add.circle(centerX, centerY, 60, 0xffd93d, 0.5);
+    const middleEid = addEntity(this.world);
+    addComponent(this.world, middleEid, Position);
+    addComponent(this.world, middleEid, Target);
+    Position.x[middleEid] = centerX;
+    Position.y[middleEid] = centerY;
+    Target.points[middleEid] = 10;
+    this.gameObjects.set(middleEid, middle);
+
+    // Inner circle (20 points)
+    const inner = this.add.circle(centerX, centerY, 30, 0x6bcf7f, 0.5);
+    const innerEid = addEntity(this.world);
+    addComponent(this.world, innerEid, Position);
+    addComponent(this.world, innerEid, Target);
+    Position.x[innerEid] = centerX;
+    Position.y[innerEid] = centerY;
+    Target.points[innerEid] = 20;
+    this.gameObjects.set(innerEid, inner);
+  }
+
+  private createHowToPlayOverlay(): void {
+    const bg = this.add.rectangle(640, 400, 800, 400, 0x000000, 0.8);
+    const title = this.add.text(640, 250, "HOW TO PLAY", {
+      fontSize: "32px",
+      color: "#ffffff",
+      fontStyle: "bold",
+    });
+    title.setOrigin(0.5);
+
+    const instructions = this.add.text(
+      640,
+      350,
+      "Left Stick/WASD: Aim\nSPACE: Charge & Release Stone\nZ: Fire Growth Ray (enlarge your stone)\n\nLand closest to center to score points!\nBigger stones can knock others away!",
+      {
+        fontSize: "20px",
+        color: "#ffffff",
+        align: "center",
+      }
+    );
+    instructions.setOrigin(0.5);
+
+    this.howToPlayOverlay = this.add.container(0, 0, [bg, title, instructions]);
+  }
+
+  private setupObservers(): void {
+    observe(this.world, onAdd(Stone), (eid: number) => {
+      const sprite = this.add.sprite(
+        Position.x[eid],
+        Position.y[eid],
+        "stone",
+        Stone.ownerId[eid].charCodeAt(0) % 900
+      );
+      sprite.setScale(Stone.size[eid]);
+      this.stoneSprites.set(eid, sprite);
+      this.gameObjects.set(eid, sprite);
     });
 
-    observe(this.world, onRemove(Position, Stone), (eid: number) => {
-      this.gameObjects.get(eid)?.destroy();
+    observe(this.world, onRemove(Stone), (eid: number) => {
+      const sprite = this.stoneSprites.get(eid);
+      if (sprite) {
+        sprite.destroy();
+        this.stoneSprites.delete(eid);
+      }
       this.gameObjects.delete(eid);
     });
 
     observe(this.world, onAdd(GrowthRay), (eid: number) => {
       const graphics = this.add.graphics();
+      this.rayGraphics.set(eid, graphics);
       this.gameObjects.set(eid, graphics);
     });
 
     observe(this.world, onRemove(GrowthRay), (eid: number) => {
-      this.gameObjects.get(eid)?.destroy();
+      const graphics = this.rayGraphics.get(eid);
+      if (graphics) {
+        graphics.destroy();
+        this.rayGraphics.delete(eid);
+      }
       this.gameObjects.delete(eid);
     });
+  }
 
-    // Listen for server updates
-    this.game.events.on("stone-update", this.handleStoneUpdate, this);
-    this.game.events.on("growth-ray-update", this.handleGrowthRayUpdate, this);
-    this.game.events.on("remove-entity", this.handleRemoveEntity, this);
+  private handleStateChange(state: Record<string, unknown>): void {
+    const entities = state.entities as Array<{
+      id: number;
+      type: string;
+      x: number;
+      y: number;
+      dx?: number;
+      dy?: number;
+      ownerId?: string;
+      size?: number;
+      power?: number;
+      active?: boolean;
+    }> | undefined;
+
+    if (!entities) return;
+
+    // Clear existing entities
+    for (const eid of query(this.world, [Stone])) {
+      removeEntity(this.world, eid);
+    }
+    for (const eid of query(this.world, [GrowthRay])) {
+      removeEntity(this.world, eid);
+    }
+
+    // Create entities from state
+    for (const entityData of entities) {
+      if (entityData.type === "stone") {
+        const eid = addEntity(this.world);
+        addComponent(this.world, eid, Position);
+        addComponent(this.world, eid, Velocity);
+        addComponent(this.world, eid, Stone);
+        Position.x[eid] = entityData.x;
+        Position.y[eid] = entityData.y;
+        Velocity.dx[eid] = entityData.dx || 0;
+        Velocity.dy[eid] = entityData.dy || 0;
+        Stone.ownerId[eid] = entityData.ownerId || "";
+        Stone.size[eid] = entityData.size || 1;
+        Stone.power[eid] = entityData.power || 0;
+      } else if (entityData.type === "ray") {
+        const eid = addEntity(this.world);
+        addComponent(this.world, eid, Position);
+        addComponent(this.world, eid, GrowthRay);
+        Position.x[eid] = entityData.x;
+        Position.y[eid] = entityData.y;
+        GrowthRay.ownerId[eid] = entityData.ownerId || "";
+        GrowthRay.active[eid] = entityData.active || false;
+      }
+    }
+  }
+
+  private handleGameEvent(event: string, data: unknown): void {
+    if (event === "stoneCollision") {
+      // Visual feedback for collision
+      this.cameras.main.shake(100, 0.005);
+    }
   }
 
   onUpdate(dt: number, players: PlayerState[]): void {
-    // Hide how to play after 5 seconds
-    if (this.showingHowToPlay) {
-      this.howToPlayTimer -= dt;
-      if (this.howToPlayTimer <= 0) {
-        this.showingHowToPlay = false;
-        this.howToPlayText.destroy();
+    // Hide overlay after timer
+    if (this.overlayTimer > 0) {
+      this.overlayTimer -= dt;
+      if (this.overlayTimer <= 0 && this.howToPlayOverlay) {
+        this.howToPlayOverlay.destroy();
+        this.howToPlayOverlay = null;
       }
     }
 
-    // Handle input
     const input = this.inputManager.getState();
-    const myPlayer = Array.from(this.players.values()).find(
-      (p) => p.sessionId === this.game.registry.get("sessionId")
-    );
+    this.mpClient?.sendInput(input);
 
-    if (myPlayer && input.buttons.throw) {
-      this.game.events.emit("player-action", "throw", {
-        angle: Math.atan2(input.y, input.x),
-        power: Math.sqrt(input.x * input.x + input.y * input.y),
+    // Update cooldowns
+    if (this.shootCooldown > 0) {
+      this.shootCooldown -= dt;
+    }
+    if (this.rayCooldown > 0) {
+      this.rayCooldown -= dt;
+    }
+
+    // Shooting mechanics
+    if (input.buttons.space && !this.hasShot && this.shootCooldown <= 0) {
+      // Charging
+      const chargeAmount = Math.min(1, (this.shootCooldown + dt) * 0.5);
+      if (this.powerMeter) {
+        this.powerMeter.width = chargeAmount * 200;
+      }
+      this.mpClient?.sendAction("charge", { power: chargeAmount });
+    } else if (!input.buttons.space && this.hasShot) {
+      // Release
+      this.mpClient?.sendAction("shoot", {
+        dx: input.x,
+        dy: input.y,
       });
+      this.hasShot = false;
+      this.shootCooldown = 3;
+      if (this.powerMeter) {
+        this.powerMeter.width = 0;
+      }
     }
 
-    if (myPlayer && input.buttons.grow) {
-      this.game.events.emit("player-action", "activate-ray", {});
+    if (input.buttons.space) {
+      this.hasShot = true;
     }
 
-    // Update stone physics
+    // Growth ray
+    if (input.buttons.action && this.rayCooldown <= 0 && !this.rayActive) {
+      this.mpClient?.sendAction("fireRay", {});
+      this.rayActive = true;
+      this.rayCooldown = 5;
+    } else if (!input.buttons.action) {
+      this.rayActive = false;
+    }
+
+    // Update stone positions and velocities
     for (const eid of query(this.world, [Position, Velocity, Stone])) {
       Position.x[eid] += Velocity.dx[eid] * dt;
       Position.y[eid] += Velocity.dy[eid] * dt;
 
-      Velocity.dx[eid] *= Math.pow(this.FRICTION, dt * 60);
-      Velocity.dy[eid] *= Math.pow(this.FRICTION, dt * 60);
+      // Apply friction
+      Velocity.dx[eid] *= 0.98;
+      Velocity.dy[eid] *= 0.98;
 
-      // Stop if moving very slowly
-      if (Math.abs(Velocity.dx[eid]) < 1 && Math.abs(Velocity.dy[eid]) < 1) {
+      // Stop if too slow
+      if (
+        Math.abs(Velocity.dx[eid]) < 0.1 &&
+        Math.abs(Velocity.dy[eid]) < 0.1
+      ) {
         Velocity.dx[eid] = 0;
         Velocity.dy[eid] = 0;
       }
 
-      this.updateStoneVisual(eid);
+      const sprite = this.stoneSprites.get(eid);
+      if (sprite) {
+        sprite.setPosition(Position.x[eid], Position.y[eid]);
+        sprite.setScale(Stone.size[eid]);
+      }
     }
 
-    // Update growth ray visuals
-    for (const eid of query(this.world, [GrowthRay])) {
-      if (GrowthRay.active[eid]) {
-        const graphics = this.gameObjects.get(eid);
-        if (graphics) {
-          graphics.clear();
-          const ownerId = GrowthRay.ownerId[eid];
-          const player = this.players.get(ownerId);
-          if (player) {
-            const px = (player.customData.x as number) || 640;
-            const py = (player.customData.y as number) || this.START_Y;
-            graphics.lineStyle(3, 0x00ff00, 0.6);
-            graphics.beginPath();
-            graphics.arc(px, py, 150, 0, Math.PI * 2);
-            graphics.strokePath();
-          }
-        }
+    // Update growth rays
+    for (const eid of query(this.world, [Position, GrowthRay])) {
+      const graphics = this.rayGraphics.get(eid);
+      if (graphics && GrowthRay.active[eid]) {
+        graphics.clear();
+        graphics.lineStyle(5, 0x00ff00, 1);
+        graphics.beginPath();
+        graphics.moveTo(Position.x[eid], 700);
+        graphics.lineTo(Position.x[eid], Position.y[eid]);
+        graphics.strokePath();
+      } else if (graphics) {
+        graphics.clear();
       }
     }
 
     // Update HUD
-    const timer = (players[0]?.customData.timer as number) || 0;
-    this.hud.updateTimer(timer);
+    const sessionId = this.mpClient?.getSessionId();
+    const currentPlayer = players.find((p: PlayerState) => p.sessionId === sessionId);
+    if (currentPlayer) {
+      this.hud.updateScore(currentPlayer.score || 0);
+    }
     this.hud.updatePlayerList(players);
   }
 
   checkWinCondition(players: PlayerState[]): string | null {
-    const phase = players[0]?.customData.phase as string;
-    const winnerId = players[0]?.customData.winnerId as string;
-    if (phase === "finished" && winnerId) {
-      return winnerId;
+    const maxScore = Math.max(...players.map((p: PlayerState) => p.score || 0));
+    if (maxScore >= 50) {
+      const winner = players.find((p: PlayerState) => (p.score || 0) === maxScore);
+      return winner ? winner.sessionId : null;
     }
     return null;
-  }
-
-  private updateStoneVisual(eid: number): void {
-    const graphics = this.gameObjects.get(eid);
-    if (!graphics) return;
-
-    const x = Position.x[eid];
-    const y = Position.y[eid];
-    const size = Stone.size[eid];
-    const ownerId = Stone.ownerId[eid];
-    const color = Visual.color[eid];
-
-    graphics.clear();
-    graphics.fillStyle(color, 0.8);
-    graphics.fillCircle(x, y, size);
-    graphics.lineStyle(3, 0x000000, 0.5);
-    graphics.strokeCircle(x, y, size);
-  }
-
-  private handleStoneUpdate(data: StoneData): void {
-    let eid = data.eid;
-    const existing = [...query(this.world, [Stone])].find((e) => e === eid);
-
-    if (!existing) {
-      eid = addEntity(this.world);
-      addComponent(this.world, eid, Position);
-      addComponent(this.world, eid, Velocity);
-      addComponent(this.world, eid, Stone);
-      addComponent(this.world, eid, Visual);
-    }
-
-    Position.x[eid] = data.x;
-    Position.y[eid] = data.y;
-    Velocity.dx[eid] = data.dx;
-    Velocity.dy[eid] = data.dy;
-    Stone.size[eid] = data.size;
-    Stone.ownerId[eid] = data.ownerId;
-
-    // Assign color based on owner
-    const playerIndex = Array.from(this.players.values()).findIndex(
-      (p) => p.sessionId === data.ownerId
-    );
-    const colors = [0xff6b6b, 0x4ecdc4, 0xffe66d, 0x95e1d3, 0xf38181];
-    Visual.color[eid] = colors[playerIndex % colors.length];
-    Visual.radius[eid] = data.size;
-  }
-
-  private handleGrowthRayUpdate(data: GrowthRayData): void {
-    let eid = data.eid;
-    const existing = [...query(this.world, [GrowthRay])].find((e) => e === eid);
-
-    if (!existing) {
-      eid = addEntity(this.world);
-      addComponent(this.world, eid, GrowthRay);
-    }
-
-    GrowthRay.ownerId[eid] = data.ownerId;
-    GrowthRay.active[eid] = data.active;
-
-    if (!data.active) {
-      this.gameObjects.get(eid)?.clear();
-    }
-  }
-
-  private handleRemoveEntity(eid: number): void {
-    if (this.gameObjects.has(eid)) {
-      removeEntity(this.world, eid);
-    }
   }
 }
 

@@ -10,9 +10,15 @@ export interface CatalogAsset {
   source: string;
   width: number;
   height: number;
+  orientation?: string;
   license: string;
   tags: string[];
   category: string;
+  sourceUrl?: string;
+  isSpritesheet?: boolean;
+  frameWidth?: number;
+  frameHeight?: number;
+  frameCount?: number;
 }
 
 interface Catalog {
@@ -32,16 +38,38 @@ function loadCatalog(): Catalog {
 /**
  * Find assets matching any of the given keywords (matched against tags).
  * Returns up to `limit` assets sorted by relevance (number of tag matches).
+ * Prefers square sprites for characters and landscape for backgrounds.
  */
 export function queryAssets(keywords: string[], limit = 8): CatalogAsset[] {
   const cat = loadCatalog();
   const lowerKeywords = keywords.map((k) => k.toLowerCase());
 
   const scored = cat.assets.map((asset) => {
-    const score = asset.tags.reduce((acc, tag) => {
+    let score = asset.tags.reduce((acc, tag) => {
       const tagLower = tag.toLowerCase();
       return acc + lowerKeywords.filter((kw) => tagLower.includes(kw) || kw.includes(tagLower)).length;
     }, 0);
+
+    // Orientation preference bonuses
+    const isCharacterQuery = lowerKeywords.some((kw) =>
+      ["character", "hero", "player", "enemy", "npc", "monster"].includes(kw)
+    );
+    const isBackgroundQuery = lowerKeywords.some((kw) =>
+      ["background", "tileset", "environment", "landscape"].includes(kw)
+    );
+
+    if (isCharacterQuery && (asset.orientation === "square" || asset.orientation === "portrait")) {
+      score += 0.5;
+    }
+    if (isBackgroundQuery && asset.orientation === "landscape") {
+      score += 0.5;
+    }
+
+    // Bonus for spritesheets (animated assets are more useful)
+    if (asset.isSpritesheet) {
+      score += 0.3;
+    }
+
     return { asset, score };
   });
 

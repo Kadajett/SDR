@@ -1,14 +1,14 @@
 {
   "id": "2026-02-18",
   "date": "2026-02-18",
-  "title": "Cave Curling Chaos",
-  "description": "Slide prehistoric stones toward the target, then zap them with growth rays! Grow your stones bigger for better scores while shrinking your opponents' stones.",
+  "title": "Stone Age Curling",
+  "description": "Launch prehistoric stones across the ice and use growth rays to make them bigger! Land closest to the center to score points.",
   "playerCount": {
     "min": 2,
     "max": 5
   },
-  "controls": "Left stick to aim throw direction, A button to throw stone, B button to activate growth ray (grows your stones, shrinks opponents within range)",
-  "howToPlay": "Each player gets 2 stone throws. Aim with the stick and press A to launch. After throwing, press B to activate your growth ray - it makes your stones bigger and enemy stones smaller! Closest stone to the center target wins. Rings score: Green=100pts, Yellow=50pts, Red=25pts. 3 minute rounds.",
+  "controls": "Left Stick/WASD: Aim direction | SPACE: Hold to charge power, release to shoot stone | Z: Fire growth ray to enlarge your stone",
+  "howToPlay": "Take turns launching stones toward the target circles. Use your growth ray to make your stone bigger - bigger stones can knock opponents away! Score points based on how close your stones are to the center. First to 50 points wins, or highest score when time runs out!",
   "seed": "2026-02-18-0",
   "topics": {
     "seed": "2026-02-18-0",
@@ -19,8 +19,8 @@
   "assets": {
     "sprites": [
       {
-        "key": "star",
-        "url": "https://opengameart.org/sites/default/files/star_0.png"
+        "key": "stone",
+        "url": "https://opengameart.org/sites/default/files/hyptosis_sprites-and-tiles-for-you_0.png"
       }
     ],
     "audio": [],

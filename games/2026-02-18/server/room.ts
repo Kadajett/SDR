@@ -1,342 +1,362 @@
 import type { GeneratedRoomLogic, RoomContext } from "@sdr/server";
 
-interface Vec2 {
-  x: number;
-  y: number;
-}
-
-interface Stone {
-  eid: number;
-  ownerId: string;
+interface StoneEntity {
+  id: number;
+  type: "stone";
   x: number;
   y: number;
   dx: number;
   dy: number;
+  ownerId: string;
   size: number;
+  power: number;
 }
 
-interface GrowthRay {
-  eid: number;
+interface RayEntity {
+  id: number;
+  type: "ray";
+  x: number;
+  y: number;
   ownerId: string;
   active: boolean;
-  duration: number;
 }
 
-interface GameStateData {
-  stones: Stone[];
-  growthRays: GrowthRay[];
-  nextEid: number;
-  phase: "throwing" | "growing" | "scoring" | "finished";
-  currentTurn: number;
-  roundTimer: number;
-  throwsRemaining: Map<string, number>;
-}
+type Entity = StoneEntity | RayEntity;
 
-const WORLD_WIDTH = 1280;
-const WORLD_HEIGHT = 800;
-const TARGET_X = 640;
-const TARGET_Y = 150;
-const START_Y = 700;
-const FRICTION = 0.95;
-const STONE_BASE_SIZE = 30;
-const MAX_STONE_SIZE = 100;
-const THROW_SPEED = 300;
-const GROWTH_RATE = 20;
-const SHRINK_RATE = 15;
-const GROWTH_RAY_RANGE = 150;
-const GROWTH_RAY_DURATION = 2;
-const THROWS_PER_PLAYER = 2;
-const ROUND_TIME = 180;
-
-function getDistance(x1: number, y1: number, x2: number, y2: number): number {
-  const dx = x2 - x1;
-  const dy = y2 - y1;
-  return Math.sqrt(dx * dx + dy * dy);
-}
-
-function getGameState(ctx: RoomContext): GameStateData {
-  const data = ctx.state.getCustom<GameStateData>("gameState");
-  if (!data) {
-    const initial: GameStateData = {
-      stones: [],
-      growthRays: [],
-      nextEid: 1,
-      phase: "throwing",
-      currentTurn: 0,
-      roundTimer: ROUND_TIME,
-      throwsRemaining: new Map(),
-    };
-    ctx.state.setCustom("gameState", initial);
-    return initial;
-  }
-  return data;
-}
-
-function saveGameState(ctx: RoomContext, data: GameStateData): void {
-  ctx.state.setCustom("gameState", data);
-}
-
-function initializeThrows(ctx: RoomContext, gameState: GameStateData): void {
-  const players = ctx.state.getPlayers();
-  gameState.throwsRemaining = new Map();
-  for (const player of players) {
-    gameState.throwsRemaining.set(player.sessionId, THROWS_PER_PLAYER);
-  }
-}
+let nextEntityId = 1;
+let roundTimer = 0;
+const ROUND_DURATION = 120;
 
 function createStone(
-  gameState: GameStateData,
-  ownerId: string,
   x: number,
   y: number,
   dx: number,
-  dy: number
-): Stone {
-  const stone: Stone = {
-    eid: gameState.nextEid++,
-    ownerId,
+  dy: number,
+  ownerId: string,
+  power: number
+): StoneEntity {
+  return {
+    id: nextEntityId++,
+    type: "stone",
     x,
     y,
     dx,
     dy,
-    size: STONE_BASE_SIZE,
+    ownerId,
+    size: 1,
+    power,
   };
-  gameState.stones.push(stone);
-  return stone;
 }
 
-function createGrowthRay(gameState: GameStateData, ownerId: string): GrowthRay {
-  const ray: GrowthRay = {
-    eid: gameState.nextEid++,
+function createRay(x: number, y: number, ownerId: string): RayEntity {
+  return {
+    id: nextEntityId++,
+    type: "ray",
+    x,
+    y,
     ownerId,
     active: true,
-    duration: GROWTH_RAY_DURATION,
   };
-  gameState.growthRays.push(ray);
-  return ray;
 }
 
-function updateStonePhysics(stone: Stone, dt: number): void {
-  stone.x += stone.dx * dt;
-  stone.y += stone.dy * dt;
-
-  stone.dx *= Math.pow(FRICTION, dt * 60);
-  stone.dy *= Math.pow(FRICTION, dt * 60);
-
-  if (Math.abs(stone.dx) < 1 && Math.abs(stone.dy) < 1) {
-    stone.dx = 0;
-    stone.dy = 0;
-  }
-
-  // Bounds
-  if (stone.x < stone.size) stone.x = stone.size;
-  if (stone.x > WORLD_WIDTH - stone.size) stone.x = WORLD_WIDTH - stone.size;
-  if (stone.y < stone.size) stone.y = stone.size;
-  if (stone.y > WORLD_HEIGHT - stone.size) stone.y = WORLD_HEIGHT - stone.size;
+function getEntities(ctx: RoomContext): Entity[] {
+  return ctx.state.getCustomOr<Entity[]>("entities", []);
 }
 
-function handleStoneCollisions(stones: Stone[]): void {
-  for (let i = 0; i < stones.length; i++) {
-    for (let j = i + 1; j < stones.length; j++) {
-      const a = stones[i];
-      const b = stones[j];
-      const dist = getDistance(a.x, a.y, b.x, b.y);
-      const minDist = a.size + b.size;
-
-      if (dist < minDist && dist > 0) {
-        // Separate stones
-        const overlap = minDist - dist;
-        const dx = (b.x - a.x) / dist;
-        const dy = (b.y - a.y) / dist;
-
-        a.x -= dx * overlap * 0.5;
-        a.y -= dy * overlap * 0.5;
-        b.x += dx * overlap * 0.5;
-        b.y += dy * overlap * 0.5;
-
-        // Elastic collision
-        const dvx = b.dx - a.dx;
-        const dvy = b.dy - a.dy;
-        const dvdot = dvx * dx + dvy * dy;
-
-        if (dvdot < 0) {
-          const massA = a.size * a.size;
-          const massB = b.size * b.size;
-          const totalMass = massA + massB;
-
-          const impulse = (2 * dvdot) / totalMass;
-
-          a.dx += impulse * massB * dx;
-          a.dy += impulse * massB * dy;
-          b.dx -= impulse * massA * dx;
-          b.dy -= impulse * massA * dy;
-        }
-      }
-    }
-  }
+function setEntities(ctx: RoomContext, entities: Entity[]): void {
+  ctx.state.setCustom("entities", entities);
 }
 
-function applyGrowthRay(ray: GrowthRay, stones: Stone[], dt: number, ctx: RoomContext): void {
-  const player = ctx.state.getPlayers().find((p) => p.sessionId === ray.ownerId);
-  if (!player) return;
+function calculateScore(stone: StoneEntity): number {
+  const centerX = 640;
+  const centerY = 200;
+  const distance = Math.sqrt(
+    Math.pow(stone.x - centerX, 2) + Math.pow(stone.y - centerY, 2)
+  );
 
-  const px = (ctx.state.getPlayerCustom<number>(ray.ownerId, "x")) || TARGET_X;
-  const py = (ctx.state.getPlayerCustom<number>(ray.ownerId, "y")) || START_Y;
-
-  for (const stone of stones) {
-    const dist = getDistance(stone.x, stone.y, px, py);
-    if (dist < GROWTH_RAY_RANGE) {
-      if (stone.ownerId === ray.ownerId) {
-        stone.size = Math.min(stone.size + GROWTH_RATE * dt, MAX_STONE_SIZE);
-      } else {
-        stone.size = Math.max(stone.size - SHRINK_RATE * dt, STONE_BASE_SIZE * 0.5);
-      }
-    }
-  }
+  if (distance < 30) return 20;
+  if (distance < 60) return 10;
+  if (distance < 100) return 5;
+  return 0;
 }
 
-function calculateScores(ctx: RoomContext, gameState: GameStateData): void {
-  const players = ctx.state.getPlayers();
-
-  for (const player of players) {
-    let bestDist = Infinity;
-    for (const stone of gameState.stones) {
-      if (stone.ownerId === player.sessionId) {
-        const dist = getDistance(stone.x, stone.y, TARGET_X, TARGET_Y);
-        if (dist < bestDist) {
-          bestDist = dist;
-        }
-      }
-    }
-
-    let score = 0;
-    if (bestDist < 40) score = 100;
-    else if (bestDist < 60) score = 50;
-    else if (bestDist < 80) score = 25;
-
-    ctx.state.setPlayerCustom(player.sessionId, "score", score);
-  }
+function checkCollision(a: StoneEntity, b: StoneEntity): boolean {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+  const minDist = (a.size + b.size) * 16;
+  return distance < minDist;
 }
 
-function findWinner(ctx: RoomContext): string | null {
-  const players = ctx.state.getPlayers();
-  let maxScore = -1;
-  let winnerId: string | null = null;
+function resolveCollision(a: StoneEntity, b: StoneEntity): void {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
 
-  for (const player of players) {
-    const score = (ctx.state.getPlayerCustom<number>(player.sessionId, "score")) || 0;
-    if (score > maxScore) {
-      maxScore = score;
-      winnerId = player.sessionId;
-    }
-  }
+  if (distance === 0) return;
 
-  return winnerId;
+  const nx = dx / distance;
+  const ny = dy / distance;
+
+  const relativeVelX = a.dx - b.dx;
+  const relativeVelY = a.dy - b.dy;
+  const impulse = relativeVelX * nx + relativeVelY * ny;
+
+  if (impulse < 0) return;
+
+  const massA = a.size * a.size;
+  const massB = b.size * b.size;
+  const totalMass = massA + massB;
+
+  const impulseA = (2 * massB * impulse) / totalMass;
+  const impulseB = (2 * massA * impulse) / totalMass;
+
+  a.dx -= impulseA * nx * 0.8;
+  a.dy -= impulseA * ny * 0.8;
+  b.dx += impulseB * nx * 0.8;
+  b.dy += impulseB * ny * 0.8;
 }
 
 const roomLogic: GeneratedRoomLogic = {
   onInit(ctx: RoomContext): void {
-    ctx.state.setCustom("phase", "throwing");
-    const gameState = getGameState(ctx);
-    initializeThrows(ctx, gameState);
-    saveGameState(ctx, gameState);
+    ctx.state.setCustom("entities", []);
+    ctx.state.setCustom("roundTimer", ROUND_DURATION);
+    roundTimer = ROUND_DURATION;
 
-    const players = ctx.state.getPlayers();
-    for (const player of players) {
-      ctx.state.setPlayerCustom(player.sessionId, "x", TARGET_X);
-      ctx.state.setPlayerCustom(player.sessionId, "y", START_Y);
-      ctx.state.setPlayerCustom(player.sessionId, "score", 0);
+    for (const player of ctx.state.getPlayers()) {
+      ctx.state.setPlayerCustom(player.sessionId, "canShoot", true);
+      ctx.state.setPlayerCustom(player.sessionId, "chargePower", 0);
     }
   },
 
   onUpdate(dt: number, ctx: RoomContext): void {
-    const gameState = getGameState(ctx);
+    const entities = getEntities(ctx);
+    const stones = entities.filter((e: Entity) => e.type === "stone") as StoneEntity[];
+    const rays = entities.filter((e: Entity) => e.type === "ray") as RayEntity[];
 
-    gameState.roundTimer -= dt;
-    if (gameState.roundTimer <= 0) {
-      gameState.phase = "finished";
-      calculateScores(ctx, gameState);
-      const winnerId = findWinner(ctx);
-      ctx.state.setCustom("winnerId", winnerId);
+    // Update round timer
+    roundTimer -= dt;
+    ctx.state.setCustom("roundTimer", Math.max(0, roundTimer));
+
+    // Update stones
+    for (const stone of stones) {
+      stone.x += stone.dx * dt;
+      stone.y += stone.dy * dt;
+
+      // Friction
+      stone.dx *= 0.98;
+      stone.dy *= 0.98;
+
+      // Stop if too slow
+      if (Math.abs(stone.dx) < 0.1 && Math.abs(stone.dy) < 0.1) {
+        stone.dx = 0;
+        stone.dy = 0;
+      }
+
+      // Bounds
+      if (stone.x < 100 || stone.x > 1180) {
+        stone.dx *= -0.5;
+        stone.x = Math.max(100, Math.min(1180, stone.x));
+      }
+      if (stone.y < 100 || stone.y > 700) {
+        stone.dy *= -0.5;
+        stone.y = Math.max(100, Math.min(700, stone.y));
+      }
     }
 
-    ctx.state.setCustom("timer", Math.max(0, Math.floor(gameState.roundTimer)));
-    ctx.state.setCustom("phase", gameState.phase);
-
-    // Update stone physics
-    for (const stone of gameState.stones) {
-      updateStonePhysics(stone, dt);
+    // Check collisions
+    for (let i = 0; i < stones.length; i++) {
+      for (let j = i + 1; j < stones.length; j++) {
+        if (checkCollision(stones[i], stones[j])) {
+          resolveCollision(stones[i], stones[j]);
+          ctx.broadcast("stoneCollision", {
+            a: stones[i].id,
+            b: stones[j].id,
+          });
+        }
+      }
     }
-
-    handleStoneCollisions(gameState.stones);
 
     // Update growth rays
-    for (let i = gameState.growthRays.length - 1; i >= 0; i--) {
-      const ray = gameState.growthRays[i];
-      ray.duration -= dt;
-
-      if (ray.duration <= 0) {
-        ctx.broadcast("remove-entity", { eid: ray.eid });
-        gameState.growthRays.splice(i, 1);
-      } else {
-        applyGrowthRay(ray, gameState.stones, dt, ctx);
-        ctx.broadcast("growth-ray-update", ray);
+    for (const ray of rays) {
+      if (ray.active) {
+        // Find stones owned by this player and grow them
+        const playerStones = stones.filter(
+          (s: StoneEntity) => s.ownerId === ray.ownerId
+        );
+        for (const stone of playerStones) {
+          stone.size = Math.min(2.5, stone.size + dt * 0.5);
+        }
       }
     }
 
-    // Broadcast stone updates
-    for (const stone of gameState.stones) {
-      ctx.broadcast("stone-update", stone);
+    // Remove inactive rays after 2 seconds
+    const activeRays = rays.filter((r: RayEntity) => {
+      if (!r.active) {
+        const timeSinceInactive = ctx.elapsedTime;
+        return timeSinceInactive < 2;
+      }
+      return true;
+    });
+
+    // Calculate scores when all stones are stopped
+    const allStopped = stones.every(
+      (s: StoneEntity) => s.dx === 0 && s.dy === 0
+    );
+    if (allStopped && stones.length > 0) {
+      for (const player of ctx.state.getPlayers()) {
+        const playerStones = stones.filter(
+          (s: StoneEntity) => s.ownerId === player.sessionId
+        );
+        let totalScore = 0;
+        for (const stone of playerStones) {
+          totalScore += calculateScore(stone);
+        }
+        ctx.state.setPlayerCustom(player.sessionId, "score", totalScore);
+      }
     }
 
-    saveGameState(ctx, gameState);
+    // Update entity list
+    setEntities(ctx, [...stones, ...activeRays]);
+    ctx.broadcast("stateUpdate", { entities: getEntities(ctx) });
   },
 
-  onPlayerAction(sessionId: string, action: string, data: unknown, ctx: RoomContext): void {
-    const gameState = getGameState(ctx);
+  onPlayerInput(
+    sessionId: string,
+    input: { x: number; y: number; buttons: Record<string, boolean> },
+    ctx: RoomContext
+  ): void {
+    const canShoot = ctx.state.getPlayerCustom<boolean>(sessionId, "canShoot");
+    if (!canShoot) return;
 
-    if (action === "throw" && gameState.phase === "throwing") {
-      const throwsLeft = gameState.throwsRemaining.get(sessionId) || 0;
-      if (throwsLeft > 0) {
-        const throwData = data as { angle: number; power: number };
-        const power = Math.min(throwData.power, 1);
-        const dx = Math.cos(throwData.angle) * THROW_SPEED * power;
-        const dy = Math.sin(throwData.angle) * THROW_SPEED * power;
+    // Store aim direction
+    ctx.state.setPlayerCustom(sessionId, "aimX", input.x);
+    ctx.state.setPlayerCustom(sessionId, "aimY", input.y);
+  },
 
-        const px = (ctx.state.getPlayerCustom<number>(sessionId, "x")) || TARGET_X;
-        const py = (ctx.state.getPlayerCustom<number>(sessionId, "y")) || START_Y;
+  onPlayerAction(
+    sessionId: string,
+    action: string,
+    data: unknown,
+    ctx: RoomContext
+  ): void {
+    if (action === "charge") {
+      const { power } = data as { power: number };
+      ctx.state.setPlayerCustom(sessionId, "chargePower", power);
+    } else if (action === "shoot") {
+      const canShoot = ctx.state.getPlayerCustom<boolean>(
+        sessionId,
+        "canShoot"
+      );
+      if (!canShoot) return;
 
-        const stone = createStone(gameState, sessionId, px, py, dx, dy);
-        ctx.broadcast("stone-update", stone);
+      const { dx, dy } = data as { dx: number; dy: number };
+      const power = ctx.state.getPlayerCustom<number>(
+        sessionId,
+        "chargePower"
+      ) || 0.5;
 
-        gameState.throwsRemaining.set(sessionId, throwsLeft - 1);
-      }
-    } else if (action === "activate-ray" && gameState.phase === "throwing") {
-      const existingRay = gameState.growthRays.find((r) => r.ownerId === sessionId);
-      if (!existingRay) {
-        const ray = createGrowthRay(gameState, sessionId);
-        ctx.broadcast("growth-ray-update", ray);
+      const playerIndex = ctx.state
+        .getPlayers()
+        .findIndex((p) => p.sessionId === sessionId);
+      const startX = 640 + (playerIndex - 1) * 100;
+      const startY = 700;
+
+      const speed = 300 + power * 200;
+      const magnitude = Math.sqrt(dx * dx + dy * dy);
+      const normalizedDx = magnitude > 0 ? dx / magnitude : 0;
+      const normalizedDy = magnitude > 0 ? dy / magnitude : -1;
+
+      const stone = createStone(
+        startX,
+        startY,
+        normalizedDx * speed,
+        normalizedDy * speed,
+        sessionId,
+        power
+      );
+
+      const entities = getEntities(ctx);
+      entities.push(stone);
+      setEntities(ctx, entities);
+
+      ctx.state.setPlayerCustom(sessionId, "canShoot", false);
+      ctx.state.setPlayerCustom(sessionId, "chargePower", 0);
+
+      // Allow shooting again after 5 seconds
+      setTimeout(() => {
+        ctx.state.setPlayerCustom(sessionId, "canShoot", true);
+      }, 5000);
+    } else if (action === "fireRay") {
+      const entities = getEntities(ctx);
+      const playerStones = entities.filter(
+        (e: Entity) =>
+          e.type === "stone" &&
+          (e as StoneEntity).ownerId === sessionId
+      ) as StoneEntity[];
+
+      if (playerStones.length > 0) {
+        const targetStone = playerStones[0];
+        const ray = createRay(targetStone.x, targetStone.y, sessionId);
+        entities.push(ray);
+        setEntities(ctx, entities);
+
+        // Deactivate ray after 2 seconds
+        setTimeout(() => {
+          const currentEntities = getEntities(ctx);
+          const rayIndex = currentEntities.findIndex(
+            (e: Entity) => e.type === "ray" && e.id === ray.id
+          );
+          if (rayIndex !== -1) {
+            const foundRay = currentEntities[rayIndex] as RayEntity;
+            foundRay.active = false;
+          }
+          setEntities(ctx, currentEntities);
+        }, 2000);
       }
     }
-
-    saveGameState(ctx, gameState);
   },
 
   onPlayerJoin(sessionId: string, ctx: RoomContext): void {
-    ctx.state.setPlayerCustom(sessionId, "x", TARGET_X);
-    ctx.state.setPlayerCustom(sessionId, "y", START_Y);
     ctx.state.setPlayerCustom(sessionId, "score", 0);
+    ctx.state.setPlayerCustom(sessionId, "canShoot", true);
+    ctx.state.setPlayerCustom(sessionId, "chargePower", 0);
+    ctx.state.setPlayerCustom(sessionId, "aimX", 0);
+    ctx.state.setPlayerCustom(sessionId, "aimY", -1);
+  },
 
-    const gameState = getGameState(ctx);
-    gameState.throwsRemaining.set(sessionId, THROWS_PER_PLAYER);
-    saveGameState(ctx, gameState);
+  onPlayerLeave(sessionId: string, ctx: RoomContext): void {
+    const entities = getEntities(ctx);
+    const filteredEntities = entities.filter((e: Entity) => {
+      if (e.type === "stone") {
+        return (e as StoneEntity).ownerId !== sessionId;
+      }
+      if (e.type === "ray") {
+        return (e as RayEntity).ownerId !== sessionId;
+      }
+      return true;
+    });
+    setEntities(ctx, filteredEntities);
   },
 
   checkWinCondition(ctx: RoomContext): string | null {
-    const phase = ctx.state.getCustom<string>("phase");
-    if (phase === "finished") {
-      return ctx.state.getCustom<string>("winnerId") || null;
+    const players = ctx.state.getPlayers();
+    const scores = players.map((p) => ({
+      sessionId: p.sessionId,
+      score: ctx.state.getPlayerCustom<number>(p.sessionId, "score") || 0,
+    }));
+
+    const maxScore = Math.max(...scores.map((s) => s.score));
+    if (maxScore >= 50) {
+      const winner = scores.find((s) => s.score === maxScore);
+      return winner ? winner.sessionId : null;
     }
+
+    if (roundTimer <= 0) {
+      const winner = scores.find((s) => s.score === maxScore);
+      return winner ? winner.sessionId : null;
+    }
+
     return null;
   },
 };

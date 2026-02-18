@@ -8,7 +8,27 @@ The following CC0-licensed sprite assets are pre-downloaded and available in the
 Use \`this.load.image('key', '/games/DATE/assets/filename.png')\` in preload, then \`this.add.sprite(x, y, 'key')\` in create.
 The DATE will be filled in automatically — just use the key and filename as shown.
 
-${availableAssets.map((a) => `- **${a.key}** (${a.file}): ${a.width}x${a.height}px — tags: ${a.tags.join(", ")}`).join("\n")}
+${availableAssets.map((a) => {
+    let desc = `- **${a.key}** (${a.file}): ${a.width}x${a.height}px — tags: ${a.tags.join(", ")}`;
+    if (a.isSpritesheet) {
+      desc += ` [SPRITESHEET: ${a.frameCount} frames, ${a.frameWidth}x${a.frameHeight}px each]`;
+    }
+    if (a.source) {
+      desc += ` source: ${a.source}`;
+    }
+    return desc;
+  }).join("\n")}
+
+### Using Spritesheets
+For assets marked as [SPRITESHEET], load them with frame dimensions:
+\`\`\`typescript
+// In preload:
+this.load.spritesheet('key', '/games/DATE/assets/filename.png', { frameWidth: FW, frameHeight: FH });
+// In create:
+this.anims.create({ key: 'anim-name', frames: this.anims.generateFrameNumbers('key', { start: 0, end: FRAME_COUNT - 1 }), frameRate: 10, repeat: -1 });
+this.add.sprite(x, y, 'key').play('anim-name');
+\`\`\`
+Use the frameWidth, frameHeight, and frameCount values shown for each spritesheet asset.
 
 **IMPORTANT**: When using these assets, add them to the assets.json manifest like:
 \`\`\`json
@@ -354,6 +374,20 @@ Use empty arrays unless you have specific catalog assets. Use colored rectangles
 12. Do NOT use defineQuery — it does not exist in bitECS 0.4, use query() directly
 13. Use \`import type { GeneratedRoomLogic, RoomContext } from "@sdr/server"\` in server room files
 14. For networking on the client, import ONLY \`MultiplayerClient\` from "@sdr/engine". Do NOT import from "colyseus.js" directly.
+17. MultiplayerClient does NOT have \`.sessionId\` — use \`.getSessionId()\` instead.
+18. MultiplayerClient does NOT have \`.onMessage()\` — use \`.setCallbacks()\` for receiving messages. You MUST provide ALL callback fields:
+\`\`\`typescript
+this.mpClient?.setCallbacks({
+  onPlayerJoin: (player: PlayerState) => { /* handle join */ },
+  onPlayerLeave: (sessionId: string) => { /* handle leave */ },
+  onStateChange: (state: Record<string, unknown>) => { /* handle state change */ },
+  onGameEvent: (event: string, data: unknown) => { /* handle custom messages from ctx.broadcast() */ },
+  onError: (error: Error) => { console.error(error); },
+});
+\`\`\`
+Also available: \`.sendMessage(type, data)\` to send arbitrary messages to the server.
+19. When accessing x/y on Phaser GameObjects from a Map, cast them: \`const obj = gameObjects.get(eid) as Phaser.GameObjects.Sprite; obj.x = ...\` — the base \`GameObject\` type doesn't expose x/y.
+20. GameState does NOT have \`getPlayerCustomOr()\` — use \`getPlayerCustom<T>(sessionId, key)\` and handle undefined yourself, or use \`getCustomOr(key, default)\` for non-player state.
 15. All function parameters and variables must have explicit types (strict mode is enabled)
 16. Always declare \`private mpClient: MultiplayerClient | null = null;\` on the scene class and implement \`setMultiplayerClient(client: MultiplayerClient): void { this.mpClient = client; }\`
 `;
