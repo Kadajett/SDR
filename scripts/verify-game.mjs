@@ -45,7 +45,8 @@ async function verify() {
     if (playButton) {
       console.log('Found Play button, clicking...');
       await playButton.click();
-      await page.waitForTimeout(3000);
+      // Wait for "How to Play" overlay to disappear (shows for 5 seconds at game start)
+      await page.waitForTimeout(8000);
     }
 
     // Check for canvas element
