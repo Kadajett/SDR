@@ -5,18 +5,24 @@ import VirtualJoystick from "phaser3-rex-plugins/plugins/virtualjoystick.js";
  * Unified input state returned by InputManager.getState().
  * Works across all input methods: gamepad (Steam Deck), keyboard, and mobile touch.
  *
- * Axes:
- *   - moveX/moveY: primary movement (-1 to 1). Left stick / WASD / touch joystick.
- *   - aimX/aimY:   aim or look direction (-1 to 1). Right stick only (mouse aim TBD).
+ * Axes (held, -1 to 1):
+ *   - moveX/moveY: primary movement. Left stick / WASD / touch joystick.
+ *   - aimX/aimY:   aim direction. Right stick only.
  *
- * Buttons (boolean):
- *   - action1: A / Space / touch-A  — primary action (jump, confirm, collect)
- *   - action2: B / Shift / touch-B  — secondary action (dodge, cancel, back)
- *   - action3: X / E                — tertiary action (interact, use item)
- *   - action4: Y / Q                — quaternary action (special, inventory)
- *   - bumperLeft:  LB / Tab         — cycle left, previous
- *   - bumperRight: RB / R           — cycle right, next
- *   - pause:       Start / Escape   — pause menu
+ * Buttons — "held" (true while held down):
+ *   - action1: A / Space / touch-A  — primary action
+ *   - action2: B / Shift / touch-B  — secondary action
+ *   - action3: X / E                — tertiary action
+ *   - action4: Y / Q                — quaternary action
+ *   - bumperLeft:  LB / Tab
+ *   - bumperRight: RB / R
+ *   - pause:       Start / Escape
+ *
+ * Buttons — "just pressed" (true on the FIRST frame the button goes down):
+ *   - action1Pressed, action2Pressed, action3Pressed, action4Pressed
+ *   - bumperLeftPressed, bumperRightPressed, pausePressed
+ *   Use these for discrete actions (jump, shoot) so they fire exactly once per press.
+ *   Gamepad does not expose justDown natively; InputManager tracks it manually.
  *
  * Triggers (analog 0.0–1.0):
  *   - triggerLeft:  LT  — aim, brake
@@ -26,19 +32,35 @@ import VirtualJoystick from "phaser3-rex-plugins/plugins/virtualjoystick.js";
  *   - lastDevice: which input method was most recently active
  */
 export interface InputState {
+  // Axes
   moveX: number;
   moveY: number;
   aimX: number;
   aimY: number;
+
+  // Held buttons
   action1: boolean;
   action2: boolean;
   action3: boolean;
   action4: boolean;
   bumperLeft: boolean;
   bumperRight: boolean;
+  pause: boolean;
+
+  // Just-pressed (first frame only) — use for discrete actions
+  action1Pressed: boolean;
+  action2Pressed: boolean;
+  action3Pressed: boolean;
+  action4Pressed: boolean;
+  bumperLeftPressed: boolean;
+  bumperRightPressed: boolean;
+  pausePressed: boolean;
+
+  // Triggers (analog)
   triggerLeft: number;
   triggerRight: number;
-  pause: boolean;
+
+  // Meta
   lastDevice: "keyboard" | "gamepad" | "touch";
 }
 
@@ -59,6 +81,13 @@ export class InputManager {
   };
 
   private _lastDevice: "keyboard" | "gamepad" | "touch" = "keyboard";
+
+  // Previous-frame button state for justPressed detection.
+  // Gamepad doesn't expose justDown natively, so we track it here.
+  private _prev = {
+    action1: false, action2: false, action3: false, action4: false,
+    bumperLeft: false, bumperRight: false, pause: false,
+  };
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -187,16 +216,20 @@ export class InputManager {
   /**
    * Returns the current unified input state.
    * Safe to call every frame from onUpdate().
+   *
+   * Call this exactly ONCE per frame — justPressed fields are computed
+   * relative to the previous call.
    */
   getState(): InputState {
     const state: InputState = {
       moveX: 0, moveY: 0,
       aimX: 0, aimY: 0,
-      action1: false, action2: false,
-      action3: false, action4: false,
-      bumperLeft: false, bumperRight: false,
+      action1: false, action2: false, action3: false, action4: false,
+      bumperLeft: false, bumperRight: false, pause: false,
+      action1Pressed: false, action2Pressed: false,
+      action3Pressed: false, action4Pressed: false,
+      bumperLeftPressed: false, bumperRightPressed: false, pausePressed: false,
       triggerLeft: 0, triggerRight: 0,
-      pause: false,
       lastDevice: this._lastDevice,
     };
 
@@ -204,7 +237,25 @@ export class InputManager {
     this.applyKeyboard(state);
     this.applyTouch(state);
 
+    // Compute justPressed: true only on the frame the button transitions from up → down
+    state.action1Pressed    = state.action1    && !this._prev.action1;
+    state.action2Pressed    = state.action2    && !this._prev.action2;
+    state.action3Pressed    = state.action3    && !this._prev.action3;
+    state.action4Pressed    = state.action4    && !this._prev.action4;
+    state.bumperLeftPressed  = state.bumperLeft  && !this._prev.bumperLeft;
+    state.bumperRightPressed = state.bumperRight && !this._prev.bumperRight;
+    state.pausePressed       = state.pause       && !this._prev.pause;
+
+    // Store for next frame
+    this._prev.action1    = state.action1;
+    this._prev.action2    = state.action2;
     state.lastDevice = this._lastDevice;
+    this._prev.action3    = state.action3;
+    this._prev.action4    = state.action4;
+    this._prev.bumperLeft  = state.bumperLeft;
+    this._prev.bumperRight = state.bumperRight;
+    this._prev.pause       = state.pause;
+
     return state;
   }
 

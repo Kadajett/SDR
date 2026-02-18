@@ -157,13 +157,15 @@ export default class TodaysGame extends BaseScene {
   // REQUIRED: called every frame
   onUpdate(dt: number, players: PlayerState[]): void {
     const input = this.inputManager.getState();
-    // input.moveX/moveY: -1..1 (left stick / WASD / touch joystick)
-    // input.action1: A / Space / touch-A
-    // input.action2: B / Shift / touch-B
-    // input.action3: X / E
-    // input.action4: Y / Q
-    // input.pause: Start / Escape
-    // input.lastDevice: "keyboard" | "gamepad" | "touch"
+    // Axes (held):        input.moveX / moveY / aimX / aimY     (-1 to 1)
+    // Held buttons:       input.action1 / action2 / action3 / action4 / pause
+    // Just-pressed:       input.action1Pressed / action2Pressed / action3Pressed / action4Pressed
+    //   ^^ use these for discrete actions (jump, fire) — true only on first frame of press
+    // Bumpers:            input.bumperLeft / bumperRight / bumperLeftPressed / bumperRightPressed
+    // Triggers (analog):  input.triggerLeft / triggerRight  (0.0–1.0)
+    // lastDevice:         "keyboard" | "gamepad" | "touch"
+
+    // CALL getState() EXACTLY ONCE PER FRAME — justPressed is relative to previous call
 
     inputSystem(this.world, input, this.localPlayerEid, 200);
     movementSystem(this.world, dt);
