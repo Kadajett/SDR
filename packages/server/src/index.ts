@@ -30,6 +30,9 @@ app.use((_req, res, next) => {
   next();
 });
 
+// Serve web client (public dir is in src/, resolve relative to dist/)
+app.use(express.static(join(import.meta.dirname, "..", "src", "public")));
+
 // Serve generated game assets
 app.use("/games", express.static(gamesDir));
 
