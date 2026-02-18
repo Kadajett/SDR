@@ -1,8 +1,143 @@
 {
   "version": "1.0.0",
-  "description": "Pre-curated asset catalog from opengameart.org",
-  "sprites": [],
+  "description": "Curated CC0 game assets from OpenGameArt.org",
+  "assets": [
+    {
+      "key": "spaceship",
+      "file": "spaceship.png",
+      "source": "https://opengameart.org/sites/default/files/spaceship_0.png",
+      "width": 960, "height": 540,
+      "license": "CC0",
+      "tags": ["space", "ship", "vehicle", "shooter"],
+      "category": "sprite"
+    },
+    {
+      "key": "alien",
+      "file": "alien.png",
+      "source": "https://opengameart.org/sites/default/files/alien_0.png",
+      "width": 208, "height": 235,
+      "license": "CC0",
+      "tags": ["alien", "enemy", "space", "character"],
+      "category": "sprite"
+    },
+    {
+      "key": "coin",
+      "file": "coin.png",
+      "source": "https://opengameart.org/sites/default/files/coin_0.png",
+      "width": 192, "height": 16,
+      "license": "CC0",
+      "tags": ["coin", "money", "collectible", "gold", "spritesheet"],
+      "category": "spritesheet"
+    },
+    {
+      "key": "star",
+      "file": "star.png",
+      "source": "https://opengameart.org/sites/default/files/star_0.png",
+      "width": 101, "height": 171,
+      "license": "CC0",
+      "tags": ["star", "collectible", "powerup", "space"],
+      "category": "sprite"
+    },
+    {
+      "key": "heart",
+      "file": "heart.png",
+      "source": "https://opengameart.org/sites/default/files/heart_0.png",
+      "width": 44, "height": 44,
+      "license": "CC0",
+      "tags": ["heart", "health", "life", "ui", "hud"],
+      "category": "sprite"
+    },
+    {
+      "key": "explosion",
+      "file": "explosion.png",
+      "source": "https://opengameart.org/sites/default/files/explosion_0.png",
+      "width": 768, "height": 512,
+      "license": "CC0",
+      "tags": ["explosion", "effect", "fire", "boom"],
+      "category": "spritesheet"
+    },
+    {
+      "key": "ball",
+      "file": "ball.png",
+      "source": "https://opengameart.org/sites/default/files/ball_0.png",
+      "width": 40, "height": 40,
+      "license": "CC0",
+      "tags": ["ball", "sports", "projectile", "circle"],
+      "category": "sprite"
+    },
+    {
+      "key": "arrow",
+      "file": "arrow.png",
+      "source": "https://opengameart.org/sites/default/files/arrow_0.png",
+      "width": 17, "height": 137,
+      "license": "CC0",
+      "tags": ["arrow", "projectile", "weapon"],
+      "category": "sprite"
+    },
+    {
+      "key": "shield",
+      "file": "shield.png",
+      "source": "https://opengameart.org/sites/default/files/shield_0.png",
+      "width": 193, "height": 336,
+      "license": "CC0",
+      "tags": ["shield", "defense", "armor", "item"],
+      "category": "sprite"
+    },
+    {
+      "key": "sword",
+      "file": "sword.png",
+      "source": "https://opengameart.org/sites/default/files/sword_0.png",
+      "width": 223, "height": 689,
+      "license": "CC0",
+      "tags": ["sword", "weapon", "melee", "item"],
+      "category": "sprite"
+    },
+    {
+      "key": "bullet",
+      "file": "bullet.png",
+      "source": "https://opengameart.org/sites/default/files/bullet_0.png",
+      "width": 16, "height": 16,
+      "license": "CC0",
+      "tags": ["bullet", "projectile", "shooter"],
+      "category": "sprite"
+    },
+    {
+      "key": "food",
+      "file": "food.png",
+      "source": "https://opengameart.org/sites/default/files/food.png",
+      "width": 241, "height": 42,
+      "license": "CC0",
+      "tags": ["food", "collectible", "health", "powerup"],
+      "category": "spritesheet"
+    },
+    {
+      "key": "tree",
+      "file": "tree.png",
+      "source": "https://opengameart.org/sites/default/files/tree_0.png",
+      "width": 79, "height": 118,
+      "license": "CC0",
+      "tags": ["tree", "nature", "obstacle", "environment"],
+      "category": "sprite"
+    },
+    {
+      "key": "rock",
+      "file": "rock.png",
+      "source": "https://opengameart.org/sites/default/files/rock.png",
+      "width": 101, "height": 171,
+      "license": "CC0",
+      "tags": ["rock", "obstacle", "environment", "nature"],
+      "category": "sprite"
+    },
+    {
+      "key": "ghost",
+      "file": "ghost.png",
+      "source": "https://opengameart.org/sites/default/files/ghost.png",
+      "width": 98, "height": 90,
+      "license": "CC0",
+      "tags": ["ghost", "enemy", "spooky", "character"],
+      "category": "sprite"
+    }
+  ],
   "audio": [],
-  "music": [],
-  "_note": "Assets will be added as they are curated from opengameart.org (CC0/CC-BY licenses only)"
+  "music": []
 }

@@ -1,5 +1,10 @@
 {
-  "sprites": [],
+  "sprites": [
+    {
+      "key": "star",
+      "url": "https://opengameart.org/sites/default/files/star_0.png"
+    }
+  ],
   "audio": [],
   "music": []
 }

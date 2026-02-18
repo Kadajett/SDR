@@ -158,7 +158,10 @@ async function checkSpritesheetDimensions(
   for (const sprite of manifest.sprites) {
     if (!sprite.frameWidth || !sprite.frameHeight) continue;
 
-    const filePath = join(assetsDir, sprite.url);
+    const spriteFilename = sprite.url.startsWith("http")
+      ? sprite.url.split("/").pop() || sprite.key
+      : sprite.url;
+    const filePath = join(assetsDir, spriteFilename);
 
     try {
       await stat(filePath);
@@ -225,11 +228,15 @@ async function checkFileExistence(
 
   for (const { entry, type } of allEntries) {
     if (!entry.url) continue;
-    const filePath = join(assetsDir, entry.url);
+    // If url is an HTTP URL, check for the downloaded filename
+    const filename = entry.url.startsWith("http")
+      ? entry.url.split("/").pop() || entry.key
+      : entry.url;
+    const filePath = join(assetsDir, filename);
     try {
       await stat(filePath);
     } catch {
-      errors.push(`${type} "${entry.key}": file not found at ${entry.url}`);
+      errors.push(`${type} "${entry.key}": file not found at ${filename}`);
     }
   }
 

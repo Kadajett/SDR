@@ -1,7 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { GameMetadata } from "@sdr/shared";
-import { SYSTEM_PROMPT } from "./system.js";
+import { buildSystemPrompt } from "./system.js";
 import { randomize, topicsToPrompt } from "../randomizer/index.js";
+import { queryAssets, getAllAssets, type CatalogAsset } from "../assets/query.js";
 
 export interface GenerationResult {
   metadata: GameMetadata;
@@ -34,6 +35,17 @@ export async function generateGame(
   console.log(`Topics: ${prompt}`);
   console.log(`Seed: ${topics.seed}`);
 
+  // Query asset catalog for relevant assets based on game theme
+  const themeKeywords = prompt.toLowerCase().split(/[\s,+]+/).filter((w: string) => w.length > 2);
+  let relevantAssets = queryAssets(themeKeywords, 8);
+  // If no matches, include a general selection of assets
+  if (relevantAssets.length === 0) {
+    relevantAssets = getAllAssets().slice(0, 8);
+  }
+  console.log(`Found ${relevantAssets.length} relevant assets: ${relevantAssets.map((a: CatalogAsset) => a.key).join(", ")}`);
+
+  const systemPrompt = buildSystemPrompt(relevantAssets);
+
   const client = new Anthropic();
 
   let userPrompt = `Create a 2D multiplayer game based on this concept: **${prompt}**
@@ -42,7 +54,7 @@ Generate the following files:
 
 1. \`${CLIENT_MARKER}\` - A complete client scene extending BaseScene, using bitECS 0.4 for entity management
 2. \`${SERVER_MARKER}\` - Server room logic implementing GeneratedRoomLogic with RoomContext (import from @sdr/server)
-3. \`${ASSETS_MARKER}\` - Asset manifest (use empty arrays for now, assets will be filled in later)
+3. \`${ASSETS_MARKER}\` - Asset manifest with any sprites you want to use from the available assets catalog
 4. \`${META_MARKER}\` - Game metadata with these fields:
    { "title": "short catchy name", "description": "1-2 sentence description", "controls": "control scheme description", "howToPlay": "brief rules explanation" }
 
@@ -57,7 +69,8 @@ The game must:
 - Use ctx.state.setCustom/getCustom for all game state on the server (no hardcoded x/y/score on PlayerSchema)
 - Use ctx.broadcast() to push ECS entity data to clients when entity state changes
 - Use this.add.sprite() for catalog assets with colored rectangle fallback for simple shapes
-- Every asset key used in code MUST appear in the assets.json manifest (the validator checks this)`;
+- Every asset key used in code MUST appear in the assets.json manifest (the validator checks this)
+- Prefer using real sprites from the available assets catalog over colored rectangles when they fit the theme`;
 
   if (previousErrors && previousErrors.length > 0) {
     userPrompt += `\n\nThe previous generation attempt had these TypeScript errors. Fix them:\n${previousErrors.join("\n")}`;
@@ -66,7 +79,7 @@ The game must:
   const message = await client.messages.create({
     model: "claude-sonnet-4-5-20250929",
     max_tokens: 16000,
-    system: SYSTEM_PROMPT,
+    system: systemPrompt,
     messages: [{ role: "user", content: userPrompt }],
   });
 

@@ -1,4 +1,32 @@
-export const SYSTEM_PROMPT = `You are a game designer and TypeScript developer. You create fun, simple multiplayer games for 2-5 players using a shared game engine built on Phaser 3 + bitECS 0.4 + Colyseus.
+import type { CatalogAsset } from "../assets/query.js";
+
+export function buildSystemPrompt(availableAssets?: CatalogAsset[]): string {
+  const assetSection = availableAssets && availableAssets.length > 0
+    ? `\n## Available Game Assets
+
+The following CC0-licensed sprite assets are pre-downloaded and available in the game's assets directory.
+Use \`this.load.image('key', '/games/DATE/assets/filename.png')\` in preload, then \`this.add.sprite(x, y, 'key')\` in create.
+The DATE will be filled in automatically — just use the key and filename as shown.
+
+${availableAssets.map((a) => `- **${a.key}** (${a.file}): ${a.width}x${a.height}px — tags: ${a.tags.join(", ")}`).join("\n")}
+
+**IMPORTANT**: When using these assets, add them to the assets.json manifest like:
+\`\`\`json
+{
+  "sprites": [{ "key": "assetKey", "url": "SOURCE_URL" }],
+  "audio": [],
+  "music": []
+}
+\`\`\`
+Where SOURCE_URL is the original source URL for each asset (provided below). The generator will download them automatically.
+
+Prefer using these real sprites over colored rectangles when they match the game theme. You can still use rectangles for simple shapes or when no matching asset exists.\n`
+    : "";
+
+  return SYSTEM_PROMPT_BASE + assetSection;
+}
+
+const SYSTEM_PROMPT_BASE = `You are a game designer and TypeScript developer. You create fun, simple multiplayer games for 2-5 players using a shared game engine built on Phaser 3 + bitECS 0.4 + Colyseus.
 
 ## CRITICAL: Output Format
 
@@ -294,3 +322,6 @@ Use empty arrays unless you have specific catalog assets. Use colored rectangles
 14. Do NOT import or reference MultiplayerClient, Colyseus, or any networking on the client side. The client scene is purely local Phaser + bitECS.
 15. All function parameters and variables must have explicit types (strict mode is enabled)
 `;
+
+/** @deprecated Use buildSystemPrompt() instead */
+export const SYSTEM_PROMPT = SYSTEM_PROMPT_BASE;

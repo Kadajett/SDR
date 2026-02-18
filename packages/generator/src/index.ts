@@ -7,6 +7,7 @@ import { validateAssets } from "./validators/assets.js";
 import { writeGeneratedGame } from "./templates/game-template.js";
 import { compileGeneratedGame } from "./templates/compile.js";
 import { downloadAssets } from "./assets/downloader.js";
+import { copyAssetFromCatalog } from "./assets/copy-catalog.js";
 import type { AssetManifest } from "@sdr/shared";
 
 const exec = promisify(execFile);
@@ -61,8 +62,16 @@ async function main() {
       const gameDir = await writeGeneratedGame(today, result);
       const assetsDir = join(gameDir, "assets");
 
-      // Step 3: Download referenced assets
+      // Step 3: Copy catalog assets + download any remote assets
       const manifest: AssetManifest = JSON.parse(result.assetsManifest);
+      // First, try copying from local catalog
+      const { copyCatalogAssets } = await import("./assets/copy-catalog.js");
+      const copied = copyCatalogAssets(manifest.sprites, assetsDir);
+      if (copied.length > 0) {
+        console.log(`Copied ${copied.length} assets from catalog: ${copied.join(", ")}`);
+      }
+
+      // Then download any remaining remote assets
       const allEntries = [
         ...manifest.sprites,
         ...manifest.audio,
@@ -70,16 +79,18 @@ async function main() {
       ];
 
       if (allEntries.length > 0) {
-        console.log(`Downloading ${allEntries.length} assets...`);
-        await downloadAssets(
-          allEntries
-            .filter((e) => e.url && e.url.startsWith("http"))
-            .map((e) => ({
+        const toDownload = allEntries
+          .filter((e) => e.url && e.url.startsWith("http") && !copied.includes(e.key));
+        if (toDownload.length > 0) {
+          console.log(`Downloading ${toDownload.length} remote assets...`);
+          await downloadAssets(
+            toDownload.map((e) => ({
               url: e.url,
               filename: e.url.split("/").pop() || e.key,
               targetDir: assetsDir,
             })),
-        );
+          );
+        }
       }
 
       // Step 4: Asset validation
