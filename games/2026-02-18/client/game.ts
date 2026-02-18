@@ -161,6 +161,20 @@ export default class PrehistoricCurling extends BaseScene {
 
     // Set up observers
     this.setupObservers();
+
+    // Spawn demo stones immediately so sprites are visible even without a server
+    this.spawnDemoEntities();
+  }
+
+  private spawnDemoEntities(): void {
+    // Spawn a demo stone and target so sprites are visible in single-player/offline mode
+    // These will be replaced by real server entities when multiplayer connects
+    console.log('[SDR] Spawning demo entities for offline preview');
+    this.handleEntityUpdate([
+      { eid: 9001, type: 'stone', x: 640, y: 600, dx: 0, dy: 0, ownerId: 'demo', power: 0, growing: false },
+      { eid: 9002, type: 'stone', x: 580, y: 550, dx: 0, dy: 0, ownerId: 'demo2', power: 0, growing: false },
+      { eid: 9003, type: 'target', x: 640, y: 150, dx: 0, dy: 0, points: 10 },
+    ]);
   }
 
   private setupObservers(): void {
