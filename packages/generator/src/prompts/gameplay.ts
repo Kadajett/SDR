@@ -75,6 +75,9 @@ The game must:
     .map((block) => block.text)
     .join("\n");
 
+  // Debug: log first 500 chars of response to help diagnose extraction failures
+  console.log("Response preview:", responseText.slice(0, 500));
+
   const clientCode = extractBlock(responseText, CLIENT_MARKER);
   const serverCode = extractBlock(responseText, SERVER_MARKER);
   const assetsManifest = extractBlock(responseText, ASSETS_MARKER) || '{"sprites":[],"audio":[],"music":[]}';

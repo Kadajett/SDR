@@ -1,0 +1,24 @@
+{
+  "id": "2026-02-18",
+  "date": "2026-02-18",
+  "title": "Dino Stones",
+  "description": "Prehistoric curling meets chaos! Slide stones toward the target, then zap them with growth rays to knock out opponents. Closest to center wins!",
+  "playerCount": {
+    "min": 2,
+    "max": 5
+  },
+  "controls": "HOLD SPACE to charge launch power, RELEASE to throw stone. Press Z to fire growth ray (3s cooldown). Gamepad: A button to launch, X button for growth ray.",
+  "howToPlay": "Take turns launching stones at the target rings. After launching, use your growth ray to enlarge your stones and bump opponents away. Center ring = 3 points, middle = 2 points, outer = 1 point. Play 3 rounds, highest total score wins!",
+  "seed": "2026-02-18-0",
+  "topics": {
+    "seed": "2026-02-18-0",
+    "setting": "prehistoric",
+    "activity": "curling",
+    "twist": "with growth rays"
+  },
+  "assets": {
+    "sprites": [],
+    "audio": [],
+    "music": []
+  }
+}
