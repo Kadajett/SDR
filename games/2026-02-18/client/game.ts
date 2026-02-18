@@ -86,6 +86,13 @@ export default class PrehistoricCurling extends BaseScene {
   }
 
   preload(): void {
+    console.log('[SDR] preload() starting');
+    this.load.on('loaderror', (file: Phaser.Loader.File) => {
+      console.error('[SDR] LOAD ERROR:', file.key, file.url);
+    });
+    this.load.on('complete', () => {
+      console.log('[SDR] Load complete. Textures:', Object.keys(this.textures.list));
+    });
     this.load.image("ball", "/games/2026-02-18/assets/ball.png");
     this.load.image("star", "/games/2026-02-18/assets/star.png");
   }
@@ -206,16 +213,23 @@ export default class PrehistoricCurling extends BaseScene {
 
         if (data.type === "stone") {
           addComponent(this.world, clientEid, Stone);
-          addComponent(this.world, clientEid, Sprite);
           Stone.ownerId[clientEid] = data.ownerId || "";
           Stone.power[clientEid] = data.power || 0;
           Stone.growing[clientEid] = data.growing || false;
-          Sprite.key[clientEid] = "ball";
+          // Create sprite directly (bitecs doesn't support string arrays)
+          const textureKey = "ball";
+          console.log('[SDR] Creating stone sprite with texture:', textureKey, 'exists:', this.textures.exists(textureKey));
+          const sprite = this.add.sprite(data.x, data.y, textureKey);
+          sprite.setScale(0.5);
+          this.gameObjects.set(clientEid, sprite);
         } else if (data.type === "target") {
           addComponent(this.world, clientEid, Target);
-          addComponent(this.world, clientEid, Sprite);
           Target.points[clientEid] = data.points || 0;
-          Sprite.key[clientEid] = "star";
+          const textureKey = "star";
+          console.log('[SDR] Creating target sprite with texture:', textureKey, 'exists:', this.textures.exists(textureKey));
+          const sprite = this.add.sprite(data.x, data.y, textureKey);
+          sprite.setScale(0.5);
+          this.gameObjects.set(clientEid, sprite);
         }
       }
 

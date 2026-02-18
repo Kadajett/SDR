@@ -446,6 +446,8 @@ Also available: \`.sendMessage(type, data)\` to send arbitrary messages to the s
 15. All function parameters and variables must have explicit types (strict mode is enabled)
 16. Always declare \`private mpClient: MultiplayerClient | null = null;\` on the scene class and implement \`setMultiplayerClient(client: MultiplayerClient): void { this.mpClient = client; }\`
 17. Always support touch/mobile: accept the optional \`options\` parameter in \`launch()\`, store \`touchInput\` in the Phaser registry, and merge it with keyboard input in \`onUpdate()\` as shown above.
+18. ALWAYS add verbose console logging: in preload() add load error handler and load complete handler. In create() log each sprite creation. Use prefix [SDR] for all logs so they're easy to find in browser devtools.
+19. Do NOT use bitecs components with string arrays (e.g. \`{ key: [] as string[] }\`). bitecs only supports numeric typed arrays. Instead of using a Sprite component with a string key, create Phaser sprites directly in your entity handling code.
 `;
 
 /** @deprecated Use buildSystemPrompt() instead */
